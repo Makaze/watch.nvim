@@ -30,7 +30,8 @@ end
 local function get_buf_by_name(name)
     for _, bufnr in ipairs(A.nvim_list_bufs()) do
         local bufname = A.nvim_buf_get_name(bufnr)
-        if bufname == name then
+        local file = A.nvim_get_option_value("file", { buf = bufnr })
+        if bufname == name or file == name then
             return bufnr
         end
     end
