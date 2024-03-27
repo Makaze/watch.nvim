@@ -31,7 +31,7 @@ end
 local function get_buf_by_name(name)
     for _, bufnr in ipairs(A.nvim_list_bufs()) do
         local bufname = A.nvim_buf_get_name(bufnr)
-        bufname = bufname:gsub(uv.cwd(), "")
+        bufname = bufname:gsub(uv.cwd() .. "/", "")
         if bufname == name then
             return bufnr
         end
@@ -97,8 +97,8 @@ end
 --- @param refresh_rate integer? Time between reloads in milliseconds. Default 500
 --- @param buf integer? Buffer number to update. Default new buffer
 M.start = function(command, refresh_rate, buf)
-        -- Open the buffer if already running
-        if Watchers[command] then
+    -- Open the buffer if already running
+    if Watchers[command] then
         buf = Watchers[command].bufnr
         vim.notify(
             "[watch] "
