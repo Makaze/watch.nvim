@@ -61,12 +61,12 @@ end
 --- Replace buffer's contents with a shell command and preserve the cursor
 ---
 --- @param command string Shell command
---- @param buf integer The buffer number to update
+--- @param bufnr integer The buffer number to update
 --- @return function update Steps to take upon rerunning
-M.update = function(command, buf)
+M.update = function(command, bufnr)
     return function()
         -- Do nothing if not visible
-        if not visible(buf) then
+        if not visible(bufnr) then
             return
         end
 
@@ -84,7 +84,7 @@ M.update = function(command, buf)
         end
 
         -- Clear the buffer and insert the stripped output
-        A.nvim_buf_set_lines(buf, 0, -1, false, stripped_output)
+        A.nvim_buf_set_lines(bufnr, 0, -1, false, stripped_output)
 
         -- Restore cursor position
         A.nvim_win_set_cursor(0, save_cursor)
