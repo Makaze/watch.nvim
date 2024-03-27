@@ -25,10 +25,10 @@ command("WatchStart", function(args)
         table.insert(cmd, args[i])
     end
 
-    require("lua.watch").start(table.concat(cmd, " "), refresh_rate)
+    require("watch").start(table.concat(cmd, " "), refresh_rate)
 end, "+")
 
 --- Stop all watchers
 command("WatchStop", function()
-    require("lua.watch").stop()
+    require("watch").stop()
 end, nil)
