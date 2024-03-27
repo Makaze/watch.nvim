@@ -8,6 +8,7 @@
 local M = {}
 
 local A = vim.api
+local err = A.nvim_err_write
 
 --- Check if a buffer is visible
 ---
@@ -123,7 +124,7 @@ end
 
 --- Stop watching and detach from the buffer
 M.stop = function(event)
-    vim.enotify(vim.inspect(event))
+    err(vim.inspect(event))
     local command = vim.api.nvim_buf_get_name(event.buffer)
 
     M.watchers[command].timer:stop()
