@@ -7,7 +7,7 @@
 
 local M = {}
 
-local A = A
+local A = vim.api
 local err = A.nvim_err_write
 
 --- Check if a buffer is visible
