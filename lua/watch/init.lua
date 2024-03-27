@@ -7,7 +7,7 @@
 
 local M = {}
 
-local A = vim.api
+local A = A
 local err = A.nvim_err_write
 
 --- Check if a buffer is visible
@@ -15,8 +15,8 @@ local err = A.nvim_err_write
 --- @param bufnr integer The buffer number to check
 --- @return boolean visible
 local function visible(bufnr)
-    for _, win_id in ipairs(vim.api.nvim_list_wins()) do
-        if vim.api.nvim_win_get_buf(win_id) == bufnr then
+    for _, win_id in ipairs(A.nvim_list_wins()) do
+        if A.nvim_win_get_buf(win_id) == bufnr then
             return true
         end
     end
@@ -28,8 +28,8 @@ end
 --- @param name string The buffer name to get
 --- @return integer | nil bufnr
 local function get_buf_by_name(name)
-    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
-        local bufname = vim.api.nvim_buf_get_name(bufnr)
+    for _, bufnr in ipairs(A.nvim_list_bufs()) do
+        local bufname = A.nvim_buf_get_name(bufnr)
         if bufname == name then
             return bufnr
         end
@@ -117,13 +117,13 @@ M.start = function(command, refresh_rate, buf)
     end
 
     -- Get existing bufnr if bufname already exists
-    buf = buf or get_buf_by_name(command)
+    buf = get_buf_by_name(command) or buf
 
     -- Create a new buffer
     if not buf then
         buf = A.nvim_create_buf(false, true)
-        vim.api.nvim_buf_set_name(buf, command)
-        vim.api.nvim_set_option_value("buflisted", true, { buf = buf })
+        A.nvim_buf_set_name(buf, command)
+        A.nvim_set_option_value("buflisted", true, { buf = buf })
         A.nvim_win_set_buf(0, buf)
     end
 
