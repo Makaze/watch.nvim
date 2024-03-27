@@ -23,6 +23,20 @@ local function visible(bufnr)
     return false
 end
 
+--- Get bufnr by buffer name
+---
+--- @param name string The buffer name to get
+--- @return integer | nil bufnr
+local function get_buf_by_name(name)
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+        local bufname = vim.api.nvim_buf_get_name(bufnr)
+        if bufname == name then
+            return bufnr
+        end
+    end
+    return nil -- Buffer not found
+end
+
 -- --- @type integer | nil
 -- ---
 -- --- The buffer number to load into
@@ -101,6 +115,9 @@ M.start = function(command, refresh_rate, buf)
     if not refresh_rate or refresh_rate <= 0 then
         refresh_rate = 500
     end
+
+    -- Get existing bufnr if bufname already exists
+    buf = buf or get_buf_by_name(command)
 
     -- Create a new buffer
     if not buf then
