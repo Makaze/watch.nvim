@@ -69,6 +69,20 @@ watch.stop([{event}])                                             *watch.stop()*
                                     buffer is the same as the shell command used
                                     to start the watcher.
 
+watch.update({command}, {bufnr})                                *watch.update()*
+    Return a function that updates the buffer's contents and preserves the
+    cirsor.
+
+    Parameters:
+        {command}       (string)    Shell command to load to the buffer.
+        {refresh_rate}  (integer)   Time between refreshes in milliseconds.
+                                    Defaults to 500.
+        {bufnr}         (integer)   The buffer number to load to. Defaults to a
+                                    new buffer.
+
+    Return:
+        function:       The steps used to update the buffer.
+
 ================================================================================
 
 vim: filetype=help expandtab tabstop=4 textwidth=80 colorcolumn=81
