@@ -3,7 +3,7 @@
 --- @field command string The command to watch. Serves as the name of the watcher.
 --- @field refresh_rate integer The refresh rate for the watcher in milliseconds.
 --- @field bufnr integer The buffer number attached to the watcher.
---- @field timer timer The buffer number attached to the watcher.
+--- @field timer function The buffer number attached to the watcher.
 
 local M = {}
 
@@ -95,19 +95,19 @@ end
 ---
 --- @param command string Shell command
 --- @param refresh_rate integer? Time between reloads in milliseconds. Default 500
---- @param buf integer? Buffer number to update. Default new buffer
-M.start = function(command, refresh_rate, buf)
+--- @param bufnr integer? Buffer number to update. Default new buffer
+M.start = function(command, refresh_rate, bufnr)
     -- Open the buffer if already running
     if Watchers[command] then
-        buf = Watchers[command].bufnr
+        bufnr = Watchers[command].bufnr
         vim.notify(
             "[watch] "
                 .. command
                 .. " was already being watched on bufnr="
-                .. buf
+                .. bufnr
                 .. ". Switching..."
         )
-        A.nvim_win_set_buf(0, buf)
+        A.nvim_win_set_buf(0, bufnr)
         return
     end
 
@@ -117,14 +117,14 @@ M.start = function(command, refresh_rate, buf)
     end
 
     -- Get existing bufnr if bufname already exists
-    buf = get_buf_by_name(command) or buf
+    bufnr = get_buf_by_name(command) or bufnr
 
     -- Create a new buffer
-    if not buf then
-        buf = A.nvim_create_buf(true, true)
-        A.nvim_set_option_value("buftype", "nofile", { buf = buf })
-        A.nvim_buf_set_name(buf, command)
-        A.nvim_win_set_buf(0, buf)
+    if not bufnr then
+        bufnr = A.nvim_create_buf(true, true)
+        A.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+        A.nvim_buf_set_name(bufnr, command)
+        A.nvim_win_set_buf(0, bufnr)
     end
 
     -- Set up a timer to run the function every 500ms
@@ -132,18 +132,16 @@ M.start = function(command, refresh_rate, buf)
     timer:start(
         refresh_rate,
         refresh_rate,
-        vim.schedule_wrap(M.update(command, buf))
+        vim.schedule_wrap(M.update(command, bufnr))
     )
 
     --- @type watch.Watcher
     local watcher = {
         command = command,
-        bufnr = buf,
+        bufnr = bufnr,
         refresh_rate = refresh_rate,
         timer = timer,
     }
-
-    local bufname = A.nvim_buf_get_name(buf)
 
     Watchers[command] = watcher
 
@@ -152,7 +150,7 @@ M.start = function(command, refresh_rate, buf)
     -- Stop the timer when the buffer is unloaded or when quitting Neovim
     A.nvim_create_autocmd({ "BufUnload", "VimLeavePre" }, {
         group = group,
-        buffer = buf,
+        buffer = bufnr,
         callback = M.stop,
     })
 end
