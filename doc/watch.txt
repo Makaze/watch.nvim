@@ -1,0 +1,62 @@
+*watch.nvim*                        A scrollable `watch` alternative for Neovim.
+
+Author: Makaze <christopherslane.work@gmail.com>
+License: GPLv3.0
+
+================================================================================
+INTRODUCTION                                                             *watch*
+
+|watch.nvim| is a plugin for live watching the output of a shell command in a 
+buffer, such as `cat` or `tree`.
+
+Use case:
+
+1. You want to `watch` a command like in the linux shell, but you want to be
+   able to scroll the output, and don't want to leave Neovim. to do it.
+2. You |watch.start()| or |:WatchStart| a watch command.
+3. The command is output in a buffer at the given refresh rate in 
+   milliseconds.
+4. Watching stops when you call |watch.stop()|, |:WatchStop|, close the buffer,
+   or exit Neovim.
+
+For example, to watch the output of `tree -cdC` in the current directory,
+updating every 500 ms:
+>lua
+    local watch = require("watch")
+
+    watch.start("tree -cdC", 500)
+<
+Keep in mind that a call to |watch.start()| will run in the shell where you
+started Neovim.
+
+================================================================================
+COMMANDS                                      *watch-commands*, *watch.commands*
+
+*:WatchStart {command...} [{refresh_rate}]                            *WatchStart*
+    Watches a {command...} in a new buffer. The last argument represents the
+    refresh rate in millisceconds, or `500` if omitted.
+
+*:WatchStop*                                                         *WatchStop*
+    Manually stops the watcher. Watchers are automatically stopped when closing the
+    buffer or existing Neovim.
+
+================================================================================
+LUA API                                                 *watch-api*, *watch.api*
+
+watch.start({command}, {refresh_rate})                           *watch.start()*
+    Start a watcher showing the outoput of {command} in a new buffer, reloading
+    the contents every |{refresh_rate}| millisceconds.
+
+    Parameters:
+        {command}           (string)        Shell command to load to the buffer
+        {refresh_rate}      (integer)       Time between refreshes in
+                                            milliseconds.
+                                            Defaults to 500
+
+watch.stop()                                                      *watch.stop()*
+    Stop watching a previously started command. Sets the internal `buf` value
+    to `nil` and returns the buffer to normal.
+
+================================================================================
+
+vim: filetype=help expandtab tabstop=4 textwidth=80 colorcolumn=81
