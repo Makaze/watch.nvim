@@ -30,7 +30,7 @@ end
 local function get_buf_by_name(name)
     for _, bufnr in ipairs(A.nvim_list_bufs()) do
         local bufname = A.nvim_buf_get_name(bufnr)
-        bufname = bufame:gsub(uv.cwd(), "")
+        bufname = bufname:gsub(uv.cwd(), "")
         if bufname == name then
             return bufnr
         end
