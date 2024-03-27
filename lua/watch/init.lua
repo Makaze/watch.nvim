@@ -30,6 +30,7 @@ end
 local function get_buf_by_name(name)
     for _, bufnr in ipairs(A.nvim_list_bufs()) do
         local bufname = A.nvim_buf_get_name(bufnr)
+        bufname = bufame:gsub(uv.cwd(), "")
         if bufname == name then
             return bufnr
         end
@@ -144,6 +145,8 @@ M.start = function(command, refresh_rate, buf)
         refresh_rate = refresh_rate,
         timer = timer,
     }
+
+    local bufname = A.nvim_buf_get_name(buf)
 
     Watchers[command] = watcher
 
