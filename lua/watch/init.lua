@@ -121,11 +121,9 @@ M.start = function(command, refresh_rate, buf)
 
     -- Create a new buffer
     if not buf then
-        buf = A.nvim_create_buf(false, true)
+        buf = A.nvim_create_buf(true, true)
         A.nvim_set_option_value("buftype", "nofile", { buf = buf })
         A.nvim_buf_set_name(buf, command)
-        vim.fn.setbufvar(buf, "&buflisted", 1)
-        -- A.nvim_set_option_value("buflisted", true, { buf = buf })
         A.nvim_win_set_buf(0, buf)
     end
 
