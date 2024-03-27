@@ -107,7 +107,7 @@ M.start = function(command, refresh_rate, buf)
         buf = A.nvim_create_buf(false, true)
         vim.api.nvim_buf_set_name(buf, command)
         -- Automatically delete buffer when no longer visible
-        -- vim.api.nvim_set_option_value("bufhidden", "wipe", { buf = buf })
+        vim.api.nvim_set_option_value("buflisted", "true", { buf = buf })
         A.nvim_win_set_buf(0, buf)
     end
 

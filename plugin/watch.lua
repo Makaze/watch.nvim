@@ -14,40 +14,30 @@ end
 command("WatchStart", function(cmd)
     local args = cmd.fargs
 
-    -- First value is the name of the command
-    local from = 1
-
     -- Add the last argument to command if not a number
     local refresh_rate = tonumber(args[#args])
+    local from = 1
     local to = refresh_rate and #args - 1 or #args
 
     -- Get the command(s) from the arguments
-    local cmd = {}
+    local new_cmd = {}
     for i = from, to do
-        table.insert(cmd, args[i])
+        table.insert(new_cmd, args[i])
     end
 
-    require("watch").start(table.concat(cmd, " "), refresh_rate)
+    require("watch").start(table.concat(new_cmd, " "), refresh_rate)
 end, "+")
 
---- Stop all watchers
+--- Stop a watcher
 ---
---- @param args string[]? The command to stop watching. Default all
-command("WatchStop", function(args)
-    if not args or #args < 2 then
+--- @param cmd table The command to stop watching. Default all
+command("WatchStop", function(cmd)
+    local args = cmd.fargs
+
+    if not args or #args < 1 then
         require("watch").stop()
         return
     end
 
-    -- First value is the name of the command
-    local from = 2
-    local to = #args
-
-    -- Get the command(s) from the arguments
-    local cmd = {}
-    for i = from, to do
-        table.insert(cmd, args[i])
-    end
-
-    require("watch").stop({ file = table.concat(cmd, " ") })
+    require("watch").stop({ file = table.concat(args, " ") })
 end, "*")
