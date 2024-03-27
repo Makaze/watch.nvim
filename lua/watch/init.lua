@@ -32,13 +32,13 @@ end
 --- @type watch.Watcher[]
 ---
 --- Global list of watchers and associated data
-M.watchers = {}
+Watchers = Watchers or {}
 
---- Setup the plugin. Here for compability only.
+--- Setup the plugin.
 ---
---- @param opts table
+--- @param opts table Unused
 M.setup = function(opts)
-    -- For compatability only
+    Watchers = Watchers or {}
 end
 
 --- Replace buffer's contents with a shell command and preserve the cursor
@@ -74,13 +74,27 @@ M.update = function(command, buf)
     end
 end
 
---- Start continually reloading a buffer's contents with a shell command
+--- Start continually reloading a buffer's contents with a shell command. If the
+--- command is aleady being watched, opens that buffer in the current window.
 ---
 --- @param command string Shell command
 --- @param refresh_rate integer? Time between reloads in milliseconds. Default 500
 --- @param buf integer? Buffer number to update. Default new buffer
 M.start = function(command, refresh_rate, buf)
     local uv = vim.loop or vim.uv
+
+    -- Open the buffer if already running
+    if Watchers[command] then
+        buf = Watchers[command].bufnr
+        print(
+            command
+                .. " was already being watched on bufnr="
+                .. buf
+                .. ". Switching..."
+        )
+        A.nvim_win_set_buf(0, buf)
+        return
+    end
 
     -- Default to 500 ms
     if not refresh_rate or refresh_rate <= 0 then
@@ -112,6 +126,8 @@ M.start = function(command, refresh_rate, buf)
         timer = timer,
     }
 
+    Watchers[command] = watcher
+
     local group = A.nvim_create_augroup("WatchCleanUp", { clear = true })
 
     -- Stop the timer when the buffer is unloaded or when quitting Neovim
@@ -124,15 +140,17 @@ end
 
 --- Stop watching and detach from the buffer
 ---
---- @param event table? The event table used to choose what to stop. Defaults all
+--- @param event table? The event table used to choose what to stop. Default all
 M.stop = function(event)
     if not event or event.event == "VimLeavePre" then
-        for _, command in ipairs(M.watchers) do
-            M.watchers[command].timer:stop()
+        for _, command in ipairs(Watchers) do
+            Watchers[command].timer:stop()
+            Watchers[command] = nil
         end
     else
         local command = event.file
-        M.watchers[command].timer:stop()
+        Watchers[command].timer:stop()
+        Watchers[command] = nil
     end
 end
 

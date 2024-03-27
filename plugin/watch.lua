@@ -30,7 +30,7 @@ end, "+")
 
 --- Stop all watchers
 ---
---- @param args string[]? The command to stop watching. Defaults to all
+--- @param args string[]? The command to stop watching. Default all
 command("WatchStop", function(args)
     if not args or #args < 2 then
         require("watch").stop()
@@ -48,4 +48,4 @@ command("WatchStop", function(args)
     end
 
     require("watch").stop({ file = table.concat(cmd, " ") })
-end, nil)
+end, "*")
