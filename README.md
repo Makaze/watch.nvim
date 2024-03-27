@@ -20,22 +20,24 @@ Using [lazy.nvim](https://github.com/nvim-telescope/telescope.nvim):
 
 # Example usage:
 
-You can use the lua API or call the commands from the commandline. To watch the command `tree -cdC` every 500 milliseconds:
+You can use the Lua API or call the commands from the commandline. To watch the command `tree -cdC` every 500 milliseconds:
 
-### Using the lua api
+### Using the Lua API
 
 ##### Start
 
 ```lua
 local watch = require("watch")
-watch.start("tree -cdC", 500)
+watch.start("tree -cdC", 1000)      -- Specify 1000 ms refresh
+watch.start("tree -cdC")            -- Default to 500 ms refresh
 ```
 
 ##### Stop
 
 ```lua
 local watch = require("watch")
-watch.stop()
+watch.stop({ file = "tree -cdC" })  -- Stop watching `tree -cdC`
+watch.stop()                        -- Stop all watchers
 ```
 
 ### Using Ex commands
@@ -43,13 +45,15 @@ watch.stop()
 ##### Start
 
 ```vim
-:WatchStart tree -cdC 500
+:WatchStart tree -cdC 1000          " Specify 1000 ms refresh
+:WatchStart tree -cdC               " Default to 500 ms refresh
 ```
 
 ##### Stop
 
 ```vim
-:WatchStop
+:WatchStop tree -cdC                " Stop watching `tree -cdC`
+:WatchStop                          " Stop all watchers
 ```
 
 # Documentation

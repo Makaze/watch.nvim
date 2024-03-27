@@ -54,6 +54,7 @@ Watchers = Watchers or {}
 ---
 --- @param opts table Unused
 M.setup = function(opts)
+    --- @type watch.Watcher[]
     Watchers = Watchers or {}
 end
 
