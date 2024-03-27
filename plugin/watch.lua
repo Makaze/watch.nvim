@@ -29,6 +29,23 @@ command("WatchStart", function(args)
 end, "+")
 
 --- Stop all watchers
-command("WatchStop", function()
-    require("watch").stop()
+---
+--- @param args string[]? The command to stop watching. Defaults to all
+command("WatchStop", function(args)
+    if not args or #args < 2 then
+        require("watch").stop()
+        return
+    end
+
+    -- First value is the name of the command
+    local from = 2
+    local to = #args
+
+    -- Get the command(s) from the arguments
+    local cmd = {}
+    for i = from, to do
+        table.insert(cmd, args[i])
+    end
+
+    require("watch").stop({ file = table.concat(cmd, " ") })
 end, nil)

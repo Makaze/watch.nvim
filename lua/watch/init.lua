@@ -78,7 +78,7 @@ end
 ---
 --- @param command string Shell command
 --- @param refresh_rate integer? Time between reloads in milliseconds. Default 500
---- @param buf integer? Buffer number to update. Default new buffe
+--- @param buf integer? Buffer number to update. Default new buffer
 M.start = function(command, refresh_rate, buf)
     local uv = vim.loop or vim.uv
 
@@ -123,11 +123,17 @@ M.start = function(command, refresh_rate, buf)
 end
 
 --- Stop watching and detach from the buffer
+---
+--- @param event table? The event table used to choose what to stop. Defaults all
 M.stop = function(event)
-    err(vim.inspect(event))
-    local command = vim.api.nvim_buf_get_name(event.buffer)
-
-    M.watchers[command].timer:stop()
+    if not event or event.event == "VimLeavePre" then
+        for _, command in ipairs(M.watchers) do
+            M.watchers[command].timer:stop()
+        end
+    else
+        local command = event.file
+        M.watchers[command].timer:stop()
+    end
 end
 
 return M
