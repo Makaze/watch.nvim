@@ -15,7 +15,7 @@ Using [lazy.nvim](https://github.com/nvim-telescope/telescope.nvim):
 { "Makaze/watch.nvim" }
 ```
 
-> [!INFO]
+> [!NOTE]
 > Calling `.setup()` is not required.
 
 # Example usage:
