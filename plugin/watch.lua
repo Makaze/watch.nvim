@@ -9,11 +9,13 @@ end
 
 --- Start a new watcher
 ---
---- @param args string[] The watched command. Final argument is the refresh rate
----                      in milliseconds, or nil if not a number
-command("WatchStart", function(args)
+--- @param cmd table The watched command. Final argument is the refresh rate
+---                  in milliseconds, or nil if not a number
+command("WatchStart", function(cmd)
+    local args = cmd.fargs
+
     -- First value is the name of the command
-    local from = 2
+    local from = 1
 
     -- Add the last argument to command if not a number
     local refresh_rate = tonumber(args[#args])

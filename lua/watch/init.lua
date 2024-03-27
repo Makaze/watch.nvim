@@ -86,8 +86,9 @@ M.start = function(command, refresh_rate, buf)
     -- Open the buffer if already running
     if Watchers[command] then
         buf = Watchers[command].bufnr
-        print(
-            command
+        vim.notify(
+            "[watch] "
+                .. command
                 .. " was already being watched on bufnr="
                 .. buf
                 .. ". Switching..."
@@ -146,11 +147,17 @@ M.stop = function(event)
         for _, command in ipairs(Watchers) do
             Watchers[command].timer:stop()
             Watchers[command] = nil
+            vim.notify("[watch] Stopped watching " .. command)
         end
     else
-        local command = event.file
+        local command = event.file or event
+        if not Watchers[command] then
+            vim.notify("[watch] Error: Already not watching " .. command)
+            return
+        end
         Watchers[command].timer:stop()
         Watchers[command] = nil
+        vim.notify("[watch] Stopped watching " .. command)
     end
 end
 
