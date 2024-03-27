@@ -9,6 +9,7 @@ local M = {}
 
 local A = vim.api
 local err = A.nvim_err_write
+local uv = vim.loop or vim.uv
 
 --- Check if a buffer is visible
 ---
@@ -96,10 +97,8 @@ end
 --- @param refresh_rate integer? Time between reloads in milliseconds. Default 500
 --- @param buf integer? Buffer number to update. Default new buffer
 M.start = function(command, refresh_rate, buf)
-    local uv = vim.loop or vim.uv
-
-    -- Open the buffer if already running
-    if Watchers[command] then
+        -- Open the buffer if already running
+        if Watchers[command] then
         buf = Watchers[command].bufnr
         vim.notify(
             "[watch] "
