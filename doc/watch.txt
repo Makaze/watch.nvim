@@ -36,12 +36,21 @@ COMMANDS                                        *watch-commands*, *watch.command
     Watches a {command...} in a new buffer. The last argument represents the
     refresh rate in millisceconds, or `500` if omitted.
 
+    Parameters: ~
+        {command...}    (string)    Shell command to watch.
+        {refresh_rate}  (integer)   Time between refreshes in milliseconds.
+                                    Defaults to 500.
+
 *:WatchStop* [{command...}]                                            *WatchStop*
     Manually stops the watcher for {command...}. If a command is not given, all
     watchers are stopped.
 
     Watchers are automatically stopped when closing the buffer or exiting
     Neovim.
+
+    Parameters: ~
+        {command...}    (string)    Shell command to stop watching.
+
 
 ================================================================================
 LUA API                                                   *watch-api*, *watch.api*
@@ -50,8 +59,8 @@ watch.start({command}, [{refresh_rate}], [{bufnr}])              *watch.start()*
     Start a watcher showing the outoput of {command} in a new buffer, reloading
     the contents every |{refresh_rate}| millisceconds.
 
-    Parameters:
-        {command}       (string)    Shell command to load to the buffer.
+    Parameters: ~
+        {command}       (string)    Shell command to watch.
         {refresh_rate}  (integer)   Time between refreshes in milliseconds.
                                     Defaults to 500.
         {bufnr}         (integer)   The buffer number to load to. Defaults to a
@@ -59,29 +68,27 @@ watch.start({command}, [{refresh_rate}], [{bufnr}])              *watch.start()*
 
 watch.stop([{event}])                                             *watch.stop()*
     Stop watching a previously started command. {event} matches the autocmd
-    event API. If {event.file} is defined
+    event API. If {event} is passed, {event.file} is the command string used
+    to find the watcher.
 
-    Parameters:
-        {event}         (table)     The table passed by an autocommand.
-        
-        Required Fields:
-        {event.file}    (string)    The name of the buffer. The name of a watch 
-                                    buffer is the same as the shell command used
-                                    to start the watcher.
+    Parameters: ~
+        {event}             (table)     The table passed by an autocommand.
+        Required Fields (if passed): ~
+            {event.file}    (string)    The name of the buffer. The name of a
+                                        watch buffer is the same as the shell
+                                        command used to start the watcher.
 
 watch.update({command}, {bufnr})                                *watch.update()*
     Return a function that updates the buffer's contents and preserves the
     cirsor.
 
-    Parameters:
+    Parameters: ~
         {command}       (string)    Shell command to load to the buffer.
-        {refresh_rate}  (integer)   Time between refreshes in milliseconds.
-                                    Defaults to 500.
         {bufnr}         (integer)   The buffer number to load to. Defaults to a
                                     new buffer.
 
-    Return:
-        function:       The steps used to update the buffer.
+    Return: ~
+        (function)                  The steps used to update the buffer.
 
 ================================================================================
 
