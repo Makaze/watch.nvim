@@ -37,14 +37,14 @@ end
 --- @type watch.Watcher[]
 ---
 --- Global list of watchers and associated data
-Watchers = Watchers or {}
+local Watchers = {}
 
 --- Setup the plugin.
 ---
 --- @param opts table Unused
 M.setup = function(opts)
     --- @type watch.Watcher[]
-    Watchers = Watchers or {}
+    -- Watchers = Watchers or {}
 end
 
 --- Replace buffer's contents with a shell command and preserve the cursor
