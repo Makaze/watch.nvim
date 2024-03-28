@@ -122,7 +122,7 @@ M.start = function(command, refresh_rate, bufnr)
         channel = A.nvim_open_term(bufnr, {})
 
         -- A.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
-        A.nvim_set_option_value("mofiable", true, { buf = bufnr })
+        A.nvim_set_option_value("modifiable", true, { buf = bufnr })
         A.nvim_buf_set_name(bufnr, command)
         A.nvim_win_set_buf(0, bufnr)
     end
