@@ -8,7 +8,6 @@
 local M = {}
 
 local A = vim.api
-local err = A.nvim_err_write
 local uv = vim.loop or vim.uv
 
 --- Check if a buffer is visible
@@ -32,18 +31,13 @@ local function get_buf_by_name(name)
     for _, bufnr in ipairs(A.nvim_list_bufs()) do
         local bufname = A.nvim_buf_get_name(bufnr)
         bufname = bufname:gsub(uv.cwd() .. "/", "")
+        bufname = bufname:gsub(uv.cwd() .. "\\", "")
         if bufname == name then
             return bufnr
         end
     end
     return nil -- Buffer not found
 end
-
--- --- @type integer | nil
--- ---
--- --- The buffer number to load into
--- M.buf = nil
--- --- @type integer | nil
 
 --- @type watch.Watcher[]
 ---
