@@ -73,8 +73,9 @@ M.update = function(command, bufnr)
         -- Strip ANSI color codes from the output
         local stripped_output = {}
         for _, line in ipairs(output) do
-            local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
-            table.insert(stripped_output, stripped_line)
+            -- local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
+            -- table.insert(stripped_output, stripped_line)
+            table.insert(stripped_output, line)
         end
 
         -- Clear the buffer and insert the stripped output
