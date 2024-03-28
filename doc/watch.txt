@@ -1,4 +1,4 @@
-*watch.nvim*                           A scrollable `watch` alternative for Neovim.
+*watch.nvim*                          A scrollable `watch` alternative for Neovim.
 
 Author: Makaze <christopherslane.work@gmail.com>
 License: GPLv3.0
@@ -9,7 +9,7 @@ INTRODUCTION                                                             *watch*
 |watch.nvim| is a plugin for watching the live output of a shell command in a 
 buffer, such as `cat` or `tree`.
 
-Use case:
+Use case: ~
 
 1. You want to `watch` (continuously check the output of) a command like in the
    linux shell while being able to scroll the output without leaving Neovim.
@@ -30,9 +30,9 @@ Keep in mind that a call to watched command will run in the shell where you
 started Neovim.
 
 ================================================================================
-COMMANDS                                        *watch-commands*, *watch.commands*
+COMMANDS                                                        *watch-commands*
 
-*:WatchStart* {command...} [{refresh_rate}]                           *WatchStart*
+:WatchStart {command...} [{refresh_rate}]                           *WatchStart*
     Watches a {command...} in a new buffer. The last argument represents the
     refresh rate in millisceconds, or `500` if omitted.
 
@@ -41,7 +41,7 @@ COMMANDS                                        *watch-commands*, *watch.command
         {refresh_rate}  (integer)   Time between refreshes in milliseconds.
                                     Defaults to 500.
 
-*:WatchStop* [{command...}]                                            *WatchStop*
+:WatchStop [{command...}]                                            *WatchStop*
     Manually stops the watcher for {command...}. If a command is not given, all
     watchers are stopped.
 
@@ -53,7 +53,7 @@ COMMANDS                                        *watch-commands*, *watch.command
 
 
 ================================================================================
-LUA API                                                   *watch-api*, *watch.api*
+LUA API                                                              *watch-api*
 
 watch.start({command}, [{refresh_rate}], [{bufnr}])              *watch.start()*
     Start a watcher showing the outoput of {command} in a new buffer, reloading
