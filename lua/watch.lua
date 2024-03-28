@@ -82,7 +82,7 @@ M.update = function(command, bufnr)
                 A.nvim_buf_set_lines(bufnr, 0, -1, false, stripped_output)
 
                 -- Restore cursor position
-                -- A.nvim_win_set_cursor(0, save_cursor)
+                A.nvim_win_set_cursor(0, save_cursor)
             end)
         end)
     end
