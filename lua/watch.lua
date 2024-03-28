@@ -79,10 +79,10 @@ M.update = function(command, bufnr)
 
             -- Clear the buffer and insert the stripped output
             A.nvim_buf_set_lines(bufnr, 0, -1, false, stripped_output)
-
-            -- Restore cursor position
-            A.nvim_win_set_cursor(0, save_cursor)
         end)
+
+        -- Restore cursor position
+        A.nvim_win_set_cursor(0, save_cursor)
     end
 end
 
