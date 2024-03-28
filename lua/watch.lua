@@ -8,19 +8,16 @@
 local M = {}
 
 local A = vim.api
-local uv = vim.loop or vim.uv
+local uv = vim.uv or vim.loop
 
 --- Check if a buffer is visible
 ---
 --- @param bufnr integer The buffer number to check
 --- @return boolean visible
 local function visible(bufnr)
-    for _, win_id in ipairs(A.nvim_list_wins()) do
-        if A.nvim_win_get_buf(win_id) == bufnr then
-            return true
-        end
-    end
-    return false
+    return vim.iter(A.nvim_list_wins()):any(function(win)
+        return A.nvim_win_get_buf(win) == bufnr
+    end)
 end
 
 --- Get bufnr by buffer name
@@ -28,15 +25,13 @@ end
 --- @param name string The buffer name to get
 --- @return integer | nil bufnr
 local function get_buf_by_name(name)
-    for _, bufnr in ipairs(A.nvim_list_bufs()) do
-        local bufname = A.nvim_buf_get_name(bufnr)
-        bufname = bufname:gsub(uv.cwd() .. "/", "")
-        bufname = bufname:gsub(uv.cwd() .. "\\", "")
-        if bufname == name then
-            return bufnr
-        end
-    end
-    return nil -- Buffer not found
+    local cwd = uv.cwd()
+    return vim.iter(A.nvim_list_bufs()):find(function(b)
+        local bufname = A.nvim_buf_get_name(b)
+        bufname = bufname:gsub(cwd .. "/", "")
+        bufname = bufname:gsub(cwd .. "\\", "")
+        return bufname == name
+    end)
 end
 
 --- @type watch.Watcher[]
@@ -64,25 +59,30 @@ M.update = function(command, bufnr)
             return
         end
 
-        -- Save current cursor position
-        local save_cursor = A.nvim_win_get_cursor(0)
-
         -- Execute your command and capture its output
-        local output = vim.fn.systemlist(command)
+        -- local output = vim.fn.systemlist(command)
 
-        -- Strip ANSI color codes from the output
-        local stripped_output = {}
-        for _, line in ipairs(output) do
-            -- local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
-            -- table.insert(stripped_output, stripped_line)
-            table.insert(stripped_output, line)
-        end
+        -- Use vim.system instead
+        vim.system(vim.split(command, " "), { text = true }, function(out)
+            -- Save current cursor position
+            local save_cursor = A.nvim_win_get_cursor(0)
 
-        -- Clear the buffer and insert the stripped output
-        A.nvim_buf_set_lines(bufnr, 0, -1, false, stripped_output)
+            local output = vim.split(out.stdout, "\n")
 
-        -- Restore cursor position
-        A.nvim_win_set_cursor(0, save_cursor)
+            -- Strip ANSI color codes from the output
+            local stripped_output = {}
+            for _, line in ipairs(output) do
+                local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
+                table.insert(stripped_output, stripped_line)
+                table.insert(stripped_output, line)
+            end
+
+            -- Clear the buffer and insert the stripped output
+            A.nvim_buf_set_lines(bufnr, 0, -1, false, stripped_output)
+
+            -- Restore cursor position
+            A.nvim_win_set_cursor(0, save_cursor)
+        end)
     end
 end
 
@@ -120,10 +120,7 @@ M.start = function(command, refresh_rate, bufnr)
     -- Create a new buffer
     if not bufnr then
         bufnr = A.nvim_create_buf(true, true)
-        channel = A.nvim_open_term(bufnr, {})
-
-        -- A.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
-        A.nvim_set_option_value("modifiable", true, { buf = bufnr })
+        A.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
         A.nvim_buf_set_name(bufnr, command)
         A.nvim_win_set_buf(0, bufnr)
     end
