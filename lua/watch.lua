@@ -62,11 +62,11 @@ M.update = function(command, bufnr)
         -- Execute your command and capture its output
         -- local output = vim.fn.systemlist(command)
 
+        -- Save current cursor position
+        local save_cursor = A.nvim_win_get_cursor(0)
+
         -- Use vim.system instead
         vim.system(vim.split(command, " "), { text = true }, function(out)
-            -- Save current cursor position
-            local save_cursor = A.nvim_win_get_cursor(0)
-
             local output = vim.split(out.stdout, "\n")
 
             -- Strip ANSI color codes from the output
