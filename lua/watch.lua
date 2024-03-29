@@ -190,7 +190,7 @@ end
 --- @param event string|table? The command name to stop. If string, uses the string. If table, uses `event.file`.
 Watch.stop = function(event)
     if not event or event.event == "VimLeavePre" then
-        local watch_count = #Watch.watchers
+        local watch_count = tonumber(#Watch.watchers)
         for command, _ in pairs(Watch.watchers) do
             local W = Watch.watchers[command]
             W.timer:stop()
