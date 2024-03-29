@@ -184,7 +184,7 @@ Watch.start = function(command, refresh_rate, bufnr)
         callback = Watch.stop,
     })
 end
-Watch.stop()
+
 --- Stop watching and detach from the buffer.
 ---
 --- @param event string|table? The command name to stop. If string, uses the string. If table, uses `event.file`.
