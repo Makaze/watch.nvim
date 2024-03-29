@@ -25,7 +25,7 @@ command("WatchStart", function(cmd)
         table.insert(new_cmd, args[i])
     end
 
-    require("watch"):start(table.concat(new_cmd, " "), refresh_rate)
+    require("watch").start(table.concat(new_cmd, " "), refresh_rate, nil)
 end, "+")
 
 --- Stop a watcher
@@ -35,9 +35,9 @@ command("WatchStop", function(cmd)
     local args = cmd.fargs
 
     if not args or cmd.nargs < 1 then
-        require("watch"):stop()
+        require("watch").stop()
         return
     end
 
-    require("watch"):stop({ file = table.concat(args, " ") })
+    require("watch").stop({ file = table.concat(args, " ") })
 end, "*")
