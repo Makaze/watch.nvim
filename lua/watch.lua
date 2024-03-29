@@ -3,26 +3,26 @@
 --- @field command string The command to watch. Serves as the name of the watcher.
 --- @field refresh_rate integer The refresh rate for the watcher in milliseconds.
 --- @field bufnr integer The buffer number attached to the watcher.
---- @field timer function The buffer number attached to the watcher.
+--- @field timer function The timer object attached to the watcher.
 
-local M = {}
+local Watch = {}
 
 local A = vim.api
 local uv = vim.uv or vim.loop
 
---- Check if a buffer is visible
+--- Checks if a buffer is visible.
 ---
 --- @param bufnr integer The buffer number to check
 --- @return boolean visible
-local function visible(bufnr)
+local function is_visible(bufnr)
     return vim.iter(A.nvim_list_wins()):any(function(win)
         return A.nvim_win_get_buf(win) == bufnr
     end)
 end
 
---- Get bufnr by buffer name
+--- Gets the buffer number by the buffer name. Returns `nil` if not found.
 ---
---- @param name string The buffer name to get
+--- @param name string The buffer name to get.
 --- @return integer | nil bufnr
 local function get_buf_by_name(name)
     local cwd = uv.cwd()
@@ -36,35 +36,68 @@ end
 
 --- @type watch.Watcher[]
 ---
---- Global list of watchers and associated data
-local Watchers = {}
+--- Global list of watchers and associated data.
+Watch.watchers = {}
 
---- Setup the plugin.
+--- @class watch.Config
 ---
---- @param opts table Unused
-M.setup = function(opts)
-    --- @type watch.Watcher[]
-    -- Watchers = Watchers or {}
+--- @field refresh_rate integer The default refresh rate for a new watcher in milliseconds. Defaults to `500`.
+--- @field close_on_stop boolean Whether to automatically delete the buffer when stopping a watcher. Defaults to `false`.
+---
+--- Configuration for watch.nvim.
+
+--- @type watch.Config
+Watch.config = {
+    refresh_rate = 500,
+    close_on_stop = false,
+}
+
+--- @class watch.ConfigOverride
+---
+--- @field refresh_rate integer? The default refresh rate for a new watcher in milliseconds. Defaults to `500`.
+--- @field close_on_stop boolean? Whether to automatically delete the buffer when stopping a watcher. Defaults to `false`.
+---
+--- Configuration overrides for watch.nvim.
+
+--- Changes configuration options. See `:help watch-config`.
+--- You do not have to call this function unless you want to change anything!
+---
+--- @param opts watch.ConfigOverride?
+Watch.setup = function(opts)
+    -- Do nothing if nothing given
+    if not opts or not next(table) then
+        return
+    end
+    Watch.config =
+        vim.tbl_deep_extend("force", Watch.config, vim.F.if_nil(opts, {}))
 end
 
---- Replace buffer's contents with a shell command and preserve the cursor
+--- Replaces a buffer's contents with a shell command while preserving the cursor.
 ---
---- @param command string Shell command
---- @param bufnr integer The buffer number to update
---- @return function update Steps to take upon rerunning
-M.update = function(command, bufnr)
+--- @param command string Shell command.
+--- @param bufnr integer The buffer number to update.
+--- @return function updater Steps to take upon rerunning `command`.
+Watch.update = function(command, bufnr)
     return function()
         -- Do nothing if not visible
-        if not visible(bufnr) then
+        if not is_visible(bufnr) then
             return
         end
 
         -- Execute your command and capture its output
-        -- local output = vim.fn.systemlist(command)
-
-        -- Use vim.system instead
+        -- Use vim.system for async
         vim.system(vim.split(command, " "), { text = true }, function(out)
+            -- Need vim.schedule to use most actions inside of vim loop
             vim.schedule(function()
+                -- Handle error
+                if out.code ~= 0 then
+                    vim.notify(
+                        "[watch] ! Stopping: " .. out.stderr,
+                        vim.log.levels.ERROR
+                    )
+                    Watch.stop(command)
+                end
+
                 -- Save current cursor position
                 local save_cursor = A.nvim_win_get_cursor(0)
 
@@ -88,16 +121,15 @@ M.update = function(command, bufnr)
     end
 end
 
---- Start continually reloading a buffer's contents with a shell command. If the
---- command is aleady being watched, opens that buffer in the current window.
+--- Starts continually reloading a buffer's contents with a shell command. If the command is aleady being watched, opens that buffer in the current window.
 ---
---- @param command string Shell command
---- @param refresh_rate integer? Time between reloads in milliseconds. Default 500
---- @param bufnr integer? Buffer number to update. Default new buffer
-M.start = function(command, refresh_rate, bufnr)
+--- @param command string Shell command.
+--- @param refresh_rate integer? Time between reloads in milliseconds. Defaults to Watch.config.refresh_rate
+--- @param bufnr integer? Buffer number to update. Defaults to a new buffer.
+Watch.start = function(command, refresh_rate, bufnr)
     -- Open the buffer if already running
-    if Watchers[command] then
-        bufnr = Watchers[command].bufnr
+    if Watch.watchers[command] then
+        bufnr = Watch.watchers[command].bufnr
         vim.notify(
             "[watch] "
                 .. command
@@ -109,17 +141,15 @@ M.start = function(command, refresh_rate, bufnr)
         return
     end
 
-    -- Default to 500 ms
+    -- Default to config refresh setting
     if not refresh_rate or refresh_rate <= 0 then
-        refresh_rate = 500
+        refresh_rate = Watch.config.refresh_rate
     end
 
     -- Get existing bufnr if bufname already exists
     bufnr = get_buf_by_name(command) or bufnr
 
-    local channel = 0
-
-    -- Create a new buffer
+    -- Create a new buffer if not
     if not bufnr then
         bufnr = A.nvim_create_buf(true, true)
         A.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
@@ -127,12 +157,12 @@ M.start = function(command, refresh_rate, bufnr)
         A.nvim_win_set_buf(0, bufnr)
     end
 
-    -- Set up a timer to run the function every 500ms
+    -- Set up a timer to run the function every refresh_rate
     local timer = uv.new_timer()
     timer:start(
+        0,
         refresh_rate,
-        refresh_rate,
-        vim.schedule_wrap(M.update(command, bufnr))
+        vim.schedule_wrap(Watch.update(command, bufnr))
     )
 
     --- @type watch.Watcher
@@ -143,7 +173,7 @@ M.start = function(command, refresh_rate, bufnr)
         timer = timer,
     }
 
-    Watchers[command] = watcher
+    Watch.watchers[command] = watcher
 
     local group = A.nvim_create_augroup("WatchCleanUp", { clear = true })
 
@@ -151,30 +181,45 @@ M.start = function(command, refresh_rate, bufnr)
     A.nvim_create_autocmd({ "BufUnload", "VimLeavePre" }, {
         group = group,
         buffer = bufnr,
-        callback = M.stop,
+        callback = Watch.stop,
     })
 end
-
---- Stop watching and detach from the buffer
+Watch.stop()
+--- Stop watching and detach from the buffer.
 ---
---- @param event table? The event table used to choose what to stop. Default all
-M.stop = function(event)
+--- @param event string|table? The command name to stop. If string, uses the string. If table, uses `event.file`.
+Watch.stop = function(event)
     if not event or event.event == "VimLeavePre" then
-        for _, command in ipairs(Watchers) do
-            Watchers[command].timer:stop()
-            Watchers[command] = nil
-            vim.notify("[watch] Stopped watching " .. command)
+        local watch_count = #Watch.watchers
+        for command, _ in pairs(Watch.watchers) do
+            local W = Watch.watchers[command]
+            W.timer:stop()
+            W.timer:close()
+            if Watch.config.close_on_stop then
+                A.nvim_buf_delete(W.bufnr, { force = true })
+            end
+            Watch.watchers[command] = nil
         end
+        vim.notify("[watch] Stopped " .. watch_count .. " watchers")
     else
         local command = event.file or event
-        if not Watchers[command] then
-            vim.notify("[watch] Error: Already not watching " .. command)
+        local W = Watch.watchers[command]
+        if not W then
+            vim.notify(
+                "[watch] Error: Already not watching " .. command,
+                vim.log.levels.ERROR
+            )
+
             return
         end
-        Watchers[command].timer:stop()
-        Watchers[command] = nil
+        W.timer:stop()
+        W.timer:close()
+        if Watch.config.close_on_stop then
+            A.nvim_buf_delete(W.bufnr, { force = true })
+        end
+        Watch.watchers[command] = nil
         vim.notify("[watch] Stopped watching " .. command)
     end
 end
 
-return M
+return Watch
