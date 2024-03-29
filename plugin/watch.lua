@@ -34,7 +34,7 @@ end, "+")
 command("WatchStop", function(cmd)
     local args = cmd.fargs
 
-    if not args or cmd.nargs < 1 then
+    if not cmd or not args or #args < 1 then
         require("watch").stop()
         return
     end
