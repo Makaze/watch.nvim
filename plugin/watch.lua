@@ -7,7 +7,7 @@ local function command(name, callback, nargs)
     vim.api.nvim_create_user_command(name, callback, { nargs = nargs or "*" })
 end
 
---- Start a new watcher
+--- Starts a new watcher.
 ---
 --- @param cmd table The watched command. Final argument is the refresh rate
 ---                  in milliseconds, or nil if not a number
@@ -28,7 +28,7 @@ command("WatchStart", function(cmd)
     require("watch").start(table.concat(new_cmd, " "), refresh_rate, nil)
 end, "+")
 
---- Stop a watcher
+--- Stops a watcher.
 ---
 --- @param cmd table The command to stop watching. Default all if empty.
 command("WatchStop", function(cmd)
