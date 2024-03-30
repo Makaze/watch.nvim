@@ -1,4 +1,4 @@
---- Define a user command
+--- Defines a user Ex command.
 ---
 --- @param name string The name of the function. Will be called with `:{name}`
 --- @param callback function

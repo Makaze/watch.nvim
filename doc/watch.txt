@@ -7,14 +7,14 @@ Version: 0.1.0
 ================================================================================
 INTRODUCTION                                                             *watch*
 
-|watch.nvim| is a simple plugin for watching the live output of a shell command
-in a Neovim buffer. 
+|watch.nvim| is a simple plugin for live watching (i.e. continuously rerunning and
+check the output of) a shell command in a Neovim buffer.
 
 Use case: ~
 
-1. You want to `watch` (continuously rerun and check the output) a command with
-   changing output, while being able to scroll the output, all without leaving
-   Neovim.
+1. You want to `watch` (continuously rerun and check the output of) a shell
+   command with changing output, while being able to scroll the output, all
+   without leaving Neovim.
 2. You |watch.start()| or |:WatchStart| a shell command.
 3. The command's output is continuously loaded in a buffer at the given refresh
    rate.
@@ -30,9 +30,10 @@ Keep in mind that a call to watched command will run in the shell where you
 started Neovim.
 
 Features: ~
-    [*] Custom refresh rate
-    [*] Scrollable
-    [*] Pause watching in the background
+    [x] Customizable refresh rate
+    [x] Stop and start at will
+    [x] Scrollable
+    [x] Pause watching when in the background
 
 Planned: ~
     [ ] ANSI color support
