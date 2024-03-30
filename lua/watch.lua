@@ -195,16 +195,15 @@ Watch.stop = function(event)
         for _ in pairs(Watch.watchers) do
             watch_count = watch_count + 1
         end
-        for command, _ in pairs(Watch.watchers) do
-            local W = Watch.watchers[command]
+        for command, W in pairs(Watch.watchers) do
             W.timer:stop()
             W.timer:close()
+            Watch.watchers[command] = nil
             if Watch.config.close_on_stop then
                 vim.schedule(function()
                     A.nvim_buf_delete(W.bufnr, { force = true })
                 end)
             end
-            Watch.watchers[command] = nil
         end
         vim.notify("[watch] Stopped " .. watch_count .. " watchers")
     else
@@ -213,19 +212,19 @@ Watch.stop = function(event)
         if not W then
             vim.notify(
                 "[watch] Error: Already not watching " .. command,
-                vim.log.levels.ERROR
+                vim.log.levels.WARN
             )
 
             return
         end
         W.timer:stop()
         W.timer:close()
+        Watch.watchers[command] = nil
         if Watch.config.close_on_stop then
             vim.schedule(function()
                 A.nvim_buf_delete(W.bufnr, { force = true })
             end)
         end
-        Watch.watchers[command] = nil
         vim.notify("[watch] Stopped watching " .. command)
     end
 end
