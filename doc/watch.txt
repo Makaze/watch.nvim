@@ -1,86 +1,127 @@
-*watch.nvim*                          A scrollable `watch` alternative for Neovim.
+*watch.nvim*                        A scrollable `watch` alternative for Neovim.
 
 Author: Makaze <christopherslane.work@gmail.com>
 License: GPLv3.0
+Version: 0.1.0
 
 ================================================================================
 INTRODUCTION                                                             *watch*
 
-|watch.nvim| is a plugin for watching the live output of a shell command in a 
-buffer, such as `cat` or `tree`.
+|watch.nvim| is a simple plugin for watching the live output of a shell command
+in a Neovim buffer. 
 
 Use case: ~
 
-1. You want to `watch` (continuously check the output of) a command like in the
-   linux shell while being able to scroll the output without leaving Neovim.
+1. You want to `watch` (continuously rerun and check the output) a command with
+   changing output, while being able to scroll the output, all without leaving
+   Neovim.
 2. You |watch.start()| or |:WatchStart| a shell command.
 3. The command's output is continuously loaded in a buffer at the given refresh
    rate.
-4. Watch stops when you call |watch.stop()| or |:WatchStop|, close the buffer, or
-   exit Neovim.
+4. The watcher stops when you call |watch.stop()| or |:WatchStop|, close the
+   buffer, or exit Neovim.
 
 For an example, to watch the output of `tree -cdC` in the current directory,
 updating every `500` ms:
->lua
-    local watch = require("watch")
-
-    watch.start("tree -cdC", 500)
+>vim
+    :WatchStart tree -cdC 500
 <
 Keep in mind that a call to watched command will run in the shell where you
 started Neovim.
 
+Features: ~
+    [*] Custom refresh rate
+    [*] Scrollable
+    [*] Pause watching in the background
+
+Planned: ~
+    [ ] ANSI color support
+
 ================================================================================
 COMMANDS                                                        *watch-commands*
 
-:WatchStart {command...} [{refresh_rate}]                           *WatchStart*
+:WatchStart {command...} {refresh_rate*}                            *WatchStart*
     Watches a {command...} in a new buffer. The last argument represents the
-    refresh rate in millisceconds, or `500` if omitted.
+    refresh rate in millisceconds. Refresh defaults to the |watch-config|
+    setting if omitted.
 
     Parameters: ~
         {command...}    (string)    Shell command to watch.
         {refresh_rate}  (integer)   Time between refreshes in milliseconds.
                                     Defaults to 500.
 
-:WatchStop [{command...}]                                            *WatchStop*
+:WatchStop {command...*}                                             *WatchStop*
     Manually stops the watcher for {command...}. If a command is not given, all
     watchers are stopped.
 
-    Watchers are automatically stopped when closing the buffer or exiting
+    Watchers are also automatically stopped when closing the buffer or exiting
     Neovim.
 
     Parameters: ~
         {command...}    (string)    Shell command to stop watching.
 
+================================================================================
+CONFIGURATION                                                     *watch-config*
+
+|watch.nvim| has two configuration options. Any omitted options will default to
+the standard configuration. You can change those options by calling
+|watch.setup()|:
+>lua
+    local watch = require("watch")
+    
+    watch.setup({
+        -------------------- Default configuration -----------------------------
+        refresh_rate = 500,     -- The default refresh rate for a new watcher in
+                                -- milliseconds. Defaults to `500`.
+        close_on_stop = false,  -- Whether to automatically delete the buffer
+                                -- when stopping a watcher. Defaults to `false`.
+    })
+>
 
 ================================================================================
 LUA API                                                              *watch-api*
 
-watch.start({command}, [{refresh_rate}], [{bufnr}])              *watch.start()*
-    Start a watcher showing the outoput of {command} in a new buffer, reloading
-    the contents every |{refresh_rate}| millisceconds.
+watch.setup({opts*})                                             *watch.setup()*
+    Used to override configuration options for |watch.nvim|. See |watch-config|
+    for examples.
+
+    Parameters: ~
+        {opts}          (|watch.ConfigOverride|)
+        Keys (all keys optional): ~
+                        • `refresh_rate`: (integer) The default refresh rate for
+                          a new watcher in milliseconds. Default 500.
+                        • `close_on_stop`: (boolean) Whether to automatically
+                          delete the buffer when calling |watch.stop()|. Default
+                          false.
+
+watch.start({command}, {refresh_rate*}, {bufnr*})               *watch.start()*
+    Starts continually reloading a buffer's contents with a shell command. If
+    the command is aleady being watched, opens that buffer in the current
+    window.
 
     Parameters: ~
         {command}       (string)    Shell command to watch.
-        {refresh_rate}  (integer)   Time between refreshes in milliseconds.
-                                    Defaults to 500.
-        {bufnr}         (integer)   The buffer number to load to. Defaults to a
-                                    new buffer. 
+        {refresh_rate}  (integer)   (optional) Time between refreshes in
+                                    milliseconds. Defaults to `500`.
+        {bufnr}         (integer)   (optional) The buffer number to load to.
+                                    Defaults to a new buffer.  
 
-watch.stop([{event}])                                             *watch.stop()*
-    Stop watching a previously started command. {event} matches the autocmd
-    event API. If {event} is passed, {event.file} is the command string used
-    to find the watcher.
+watch.stop({event*})                                              *watch.stop()*
+    Stops a watcher based on a previously started command. If {event} is not
+    given, stops watchers on all commands.
 
     Parameters: ~
-        {event}             (table)     The table passed by an autocommand.
-        Required Fields (if passed): ~
-            {event.file}    (string)    The name of the buffer. The name of a
-                                        watch buffer is the same as the shell
-                                        command used to start the watcher.
+        {event}         (string|table)  (string) (optional) The command to stop.
+                                        (table) (optional) The event table
+                                        passed by an autocommand.
+        Required keys (if table): ~
+                        • `file`: (string) The command to stop. The name of a
+                          watch buffer is the same as the command used to start
+                          the watcher.
 
 watch.update({command}, {bufnr})                                *watch.update()*
-    Return a function that updates the buffer's contents and preserves the
-    cirsor.
+    Returns a function that updates the buffer's contents and preserves the
+    cursor. Used internally by |watch.start()|.
 
     Parameters: ~
         {command}       (string)    Shell command to load to the buffer.
@@ -88,7 +129,7 @@ watch.update({command}, {bufnr})                                *watch.update()*
                                     new buffer.
 
     Return: ~
-        (function)                  The steps used to update the buffer.
+        {updater}       (function)  Steps to taken upon rerunning {command}.
 
 ================================================================================
 
