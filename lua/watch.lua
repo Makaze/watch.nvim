@@ -200,7 +200,9 @@ Watch.stop = function(event)
             W.timer:stop()
             W.timer:close()
             if Watch.config.close_on_stop then
-                A.nvim_buf_delete(W.bufnr, { force = true })
+                vim.schedule(function()
+                    A.nvim_buf_delete(W.bufnr, { force = true })
+                end)
             end
             Watch.watchers[command] = nil
         end
