@@ -20,16 +20,24 @@ local function is_visible(bufnr)
     end)
 end
 
+--- Removes the current working directory from a buffer name.
+---
+--- @param name string Expanded buffer name.
+--- @return string collapsed_name
+local function collapse_bufname(name)
+    local cwd = uv.cwd()
+    name = name:gsub(cwd .. "/", "")
+    name = name:gsub(cwd .. "\\", "")
+    return name
+end
+
 --- Gets the buffer number by the buffer name. Returns `nil` if not found.
 ---
 --- @param name string The buffer name to get.
 --- @return integer | nil bufnr
 local function get_buf_by_name(name)
-    local cwd = uv.cwd()
     return vim.iter(A.nvim_list_bufs()):find(function(b)
-        local bufname = A.nvim_buf_get_name(b)
-        bufname = bufname:gsub(cwd .. "/", "")
-        bufname = bufname:gsub(cwd .. "\\", "")
+        local bufname = collapse_bufname(A.nvim_buf_get_name(b))
         return bufname == name
     end)
 end
@@ -189,7 +197,14 @@ end
 ---
 --- @param event string|table? The command name to stop. If string, uses the string. If table, uses `event.file`.
 Watch.stop = function(event)
-    if not event or event.event == "VimLeavePre" then
+    -- Get the current buffer if it is a watcher
+    local bufname = nil
+    local is_watcher = nil
+    if not event or not event.event then
+        bufname = collapse_bufname(vim.fn.expand("%"))
+        is_watcher = Watch.watchers[bufname] ~= nil
+    end
+    if not (is_watcher or event) or event.event == "VimLeavePre" then
         -- Count keys the hard way
         local watch_count = 0
         for _ in pairs(Watch.watchers) do
@@ -207,11 +222,11 @@ Watch.stop = function(event)
         end
         vim.notify("[watch] Stopped " .. watch_count .. " watchers")
     else
-        local command = event.file or event
+        local command = (event and event.file) or event or bufname
         local W = Watch.watchers[command]
         -- Only error when not expected
         if not W then
-            if not event.event or event.event ~= "BufUnload" then
+            if not event or not event.event or event.event ~= "BufUnload" then
                 vim.notify(
                     "[watch] Error: Already not watching " .. command,
                     vim.log.levels.WARN
