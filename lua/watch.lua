@@ -209,7 +209,8 @@ Watch.stop = function(event)
     else
         local command = event.file or event
         local W = Watch.watchers[command]
-        if not W then
+        -- Only error when not expected
+        if not W and (not event.event or event.event ~= "BufUnload") then
             vim.notify(
                 "[watch] Error: Already not watching " .. command,
                 vim.log.levels.WARN
