@@ -152,7 +152,7 @@ Watch.start = function(command, refresh_rate, bufnr)
     end
 
     -- Check if command is a valid executable
-    if vim.fn.executable(command) ~= 1 then
+    if vim.fn.executable(vim.split(command, " ")[1]) ~= 1 then
         vim.notify(
             "[watch] Error: Not a valid executable",
             vim.log.levels.ERROR
