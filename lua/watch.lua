@@ -147,7 +147,17 @@ end
 Watch.start = function(command, refresh_rate, bufnr)
     -- Check if command is nil
     if not command or not string.len(command) then
-        A.nvim_err_write("[watch] Error: Empty command passed")
+        vim.notify("[watch] Error: Empty command passed", vim.log.levels.ERROR)
+        return
+    end
+
+    -- Check if command is a valid executable
+    if vim.fn.executable(command) ~= 1 then
+        vim.notify(
+            "[watch] Error: Not a valid executable",
+            vim.log.levels.ERROR
+        )
+        return
     end
 
     -- Open the buffer if already running
