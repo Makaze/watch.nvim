@@ -201,7 +201,7 @@ Watch.stop = function(event)
     local bufname = nil
     if not event or not event.event then
         bufname = collapse_bufname(vim.fn.expand("%"))
-        event = Watch.watchers[bufname]
+        event = Watch.watchers[bufname] and bufname or nil
     end
     if not event or event.event == "VimLeavePre" then
         -- Count keys the hard way
