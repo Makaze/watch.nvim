@@ -30,7 +30,7 @@ end, "+")
 
 --- Stops a watcher.
 ---
---- @param cmd table The command to stop watching. Default all if empty.
+--- @param cmd table The command to stop watching. If no argument is passed, defaults to current buffer if it is a watcher; stops all watchers otherwise.
 command("WatchStop", function(cmd)
     local args = cmd.fargs
 

@@ -199,16 +199,27 @@ end
 Watch.stop = function(event)
     -- Get the current buffer if it is a watcher
     local bufname = nil
+    -- Count keys the hard way
+    local watch_count = 0
+    for _ in pairs(Watch.watchers) do
+        watch_count = watch_count + 1
+    end
     if not event or not event.event then
         bufname = collapse_bufname(vim.fn.expand("%"))
         event = Watch.watchers[bufname] and bufname or nil
+        -- Prompt if they want to close all buffers
+        if not event then
+            local response = vim.fn.input(
+                "Not a watch buffer. Stop all ("
+                    .. watch_count
+                    .. ") watchers (y/n)? "
+            )
+            if response ~= "y" and response ~= "Y" then
+                return
+            end
+        end
     end
     if not event or event.event == "VimLeavePre" then
-        -- Count keys the hard way
-        local watch_count = 0
-        for _ in pairs(Watch.watchers) do
-            watch_count = watch_count + 1
-        end
         for command, W in pairs(Watch.watchers) do
             W.timer:stop()
             W.timer:close()
