@@ -130,6 +130,15 @@ watch.stop({event*})                                              *watch.stop()*
                           watch buffer is the same as the command used to start
                           the watcher.
 
+watch.kill({command})                                              *watch.kill()*
+    Kills and cleans up a watcher.
+
+    `WARNING:` If `watch.config.close_on_kill` is set to `true`, then affected
+    buffers will also be deleted. See |watch-config| for more information.
+
+    Parameters: ~
+        {command}       (string)    Shell command of the watcher to kill.
+
 watch.update({command}, {bufnr})                                *watch.update()*
     Returns a function that updates the buffer's contents and preserves the
     cursor. Used internally by |watch.start()|.
@@ -140,7 +149,7 @@ watch.update({command}, {bufnr})                                *watch.update()*
                                     new buffer.
 
     Return: ~
-        {updater}       (function)  Steps to taken upon rerunning {command}.
+        {updater}       (function)  Steps to take upon rerunning {command}.
 
 ================================================================================
 
