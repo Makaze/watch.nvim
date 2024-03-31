@@ -35,7 +35,7 @@ end
 --- Gets the buffer number by the buffer name. Returns `nil` if not found.
 ---
 --- @param name string The buffer name to get.
---- @return integer | nil bufnr
+--- @return integer|nil bufnr
 local function get_buf_by_name(name)
     return vim.iter(A.nvim_list_bufs()):find(function(b)
         local bufname = collapse_bufname(A.nvim_buf_get_name(b))
@@ -102,7 +102,7 @@ Watch.update = function(command, bufnr)
                 if out.code ~= 0 then
                     vim.notify(
                         "[watch] ! Stopping: " .. out.stderr,
-                        vim.log.levels.ERROR
+                        vim.log.levels.WARN
                     )
                     Watch.stop(command)
                 end
