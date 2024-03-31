@@ -252,14 +252,7 @@ Watch.stop = function(event)
     end
     if not event or event.event == "VimLeavePre" then
         for command, W in pairs(Watch.watchers) do
-            W.timer:stop()
-            W.timer:close()
-            Watch.watchers[command] = nil
-            if Watch.config.close_on_stop then
-                vim.schedule(function()
-                    A.nvim_buf_delete(W.bufnr, { force = true })
-                end)
-            end
+            Watch.kill(command)
         end
         vim.notify("[watch] Stopped " .. watch_count .. " watchers")
     else
@@ -276,15 +269,28 @@ Watch.stop = function(event)
 
             return
         end
-        W.timer:stop()
-        W.timer:close()
-        Watch.watchers[command] = nil
-        if Watch.config.close_on_stop then
-            vim.schedule(function()
-                A.nvim_buf_delete(W.bufnr, { force = true })
-            end)
-        end
+        Watch.kill(command)
         vim.notify("[watch] Stopped watching " .. command)
+    end
+end
+
+--- Kills and cleans up a watcher.
+---
+--- `WARNING:` If `watch.config.close_on_stop` is set to `true`, then affected buffers will also be deleted.
+---
+--- @param command string The command name to kill.
+Watch.kill = function(command)
+    local W = Watch.watchers[command]
+    if not W then
+        return
+    end
+    W.timer:stop()
+    W.timer:close()
+    Watch.watchers[command] = nil
+    if Watch.config.close_on_stop then
+        vim.schedule(function()
+            A.nvim_buf_delete(W.bufnr, { force = true })
+        end)
     end
 end
 
