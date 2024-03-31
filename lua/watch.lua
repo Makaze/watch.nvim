@@ -9,6 +9,7 @@ local Watch = {}
 
 local A = vim.api
 local uv = vim.uv or vim.loop
+local input = require("watch.input")
 
 --- Checks if a buffer is visible.
 ---
@@ -209,11 +210,13 @@ Watch.stop = function(event)
         event = Watch.watchers[bufname] and bufname or nil
         -- Prompt if they want to close all buffers
         if not event then
-            local response = vim.fn.input(
+            local response = vim.notify(
                 "Not a watch buffer. Stop all ("
                     .. watch_count
-                    .. ") watchers (y/n)? "
+                    .. ") watchers (y/n)?",
+                vim.log.levels.WARN
             )
+            response = input.get_char()
             if response ~= "y" and response ~= "Y" then
                 return
             end
