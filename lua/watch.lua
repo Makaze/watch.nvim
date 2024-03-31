@@ -231,7 +231,7 @@ Watch.stop = function(event)
     for _ in pairs(Watch.watchers) do
         watch_count = watch_count + 1
     end
-    if not event or not event.event then
+    if not event then
         bufname = collapse_bufname(vim.fn.expand("%"))
         event = Watch.watchers[bufname] and bufname or nil
         -- Prompt if they want to close all buffers
