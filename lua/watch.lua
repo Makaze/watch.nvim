@@ -133,7 +133,7 @@ Watch.update = function(command, bufnr)
             end
         )
 
-        if code then
+        if code and Watch.watchers[command] then
             Watch.stop(command)
         end
     end
