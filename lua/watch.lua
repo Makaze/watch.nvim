@@ -103,11 +103,13 @@ Watch.update = function(command, bufnr)
                 vim.schedule(function()
                     -- Handle error
                     if out.code ~= 0 then
-                        Watch.stop(command)
-                        vim.notify(
-                            "[watch] ! Stopping: " .. out.stderr,
-                            vim.log.levels.ERROR
-                        )
+                        if Watch.watchers[command] then
+                            Watch.stop(command)
+                            vim.notify(
+                                "[watch] ! Stopping: " .. out.stderr,
+                                vim.log.levels.ERROR
+                            )
+                        end
                         return
                     end
 
@@ -133,7 +135,7 @@ Watch.update = function(command, bufnr)
             end
         )
 
-        if code and Watch.watchers[command] then
+        if code ~= 0 and Watch.watchers[command] then
             Watch.stop(command)
         end
     end
