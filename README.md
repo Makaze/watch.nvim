@@ -26,7 +26,7 @@ updating every `500` ms:
 :WatchStart tree -cdC 500
 ```
 
-Keep in mind that a call to watched command will run in the shell where you
+Keep in mind that a watched command will run in the shell where you
 started Neovim.
 
 #### Features:
