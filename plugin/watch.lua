@@ -1,16 +1,15 @@
---- Defines a user Ex command.
+--- Defines a user Ex (:) command.
 ---
---- @param name string The name of the function. Will be called with `:{name}`
+--- @param name string The name of the function. Will be called with `:{name}`.
 --- @param callback function
---- @param nargs string? How many arguments. Default "*" (0 or more)
+--- @param nargs string? How many arguments. Default "*" (0 or more).
 local function command(name, callback, nargs)
     vim.api.nvim_create_user_command(name, callback, { nargs = nargs or "*" })
 end
 
 --- Starts a new watcher.
 ---
---- @param cmd table The watched command. Final argument is the refresh rate
----                  in milliseconds, or nil if not a number
+--- @param cmd table The watched command. Final argument is the refresh rate in milliseconds, or nil if not a number.
 command("WatchStart", function(cmd)
     local args = cmd.fargs
 
@@ -30,7 +29,9 @@ end, "+")
 
 --- Stops a watcher.
 ---
---- @param cmd table The command to stop watching. If no argument is passed, defaults to current buffer if it is a watcher; stops all watchers otherwise.
+--- `WARNING:` If `watch.config.close_on_stop` is set to `true`, then affected buffers will also be deleted.
+---
+--- @param cmd table The command to stop watching. If no argument is passed, defaults to current buffer if it is a watcher; prompts to stop all watchers otherwise.
 command("WatchStop", function(cmd)
     local args = cmd.fargs
 

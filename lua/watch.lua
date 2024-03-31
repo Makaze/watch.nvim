@@ -74,7 +74,7 @@ Watch.config = {
 --- @param opts watch.ConfigOverride?
 Watch.setup = function(opts)
     -- Do nothing if nothing given
-    if not opts or not next(table) then
+    if not opts or not next(opts) then
         return
     end
     Watch.config =
@@ -130,12 +130,17 @@ Watch.update = function(command, bufnr)
     end
 end
 
---- Starts continually reloading a buffer's contents with a shell command. If the command is aleady being watched, opens that buffer in the current window.
+--- Starts continually reloading a buffer's contents with a shell command. If the command is aleady being watched, then opens that buffer in the current window.
 ---
 --- @param command string Shell command.
---- @param refresh_rate integer? Time between reloads in milliseconds. Defaults to Watch.config.refresh_rate
+--- @param refresh_rate integer? Time between reloads in milliseconds. Defaults to `watch.config.refresh_rate`.
 --- @param bufnr integer? Buffer number to update. Defaults to a new buffer.
 Watch.start = function(command, refresh_rate, bufnr)
+    -- Check if command is nil
+    if not command or not string.len(command) then
+        A.nvim_err_write("[watch] Error: Empty command passed")
+    end
+
     -- Open the buffer if already running
     if Watch.watchers[command] then
         bufnr = Watch.watchers[command].bufnr
@@ -194,9 +199,11 @@ Watch.start = function(command, refresh_rate, bufnr)
     })
 end
 
---- Stop watching and detach from the buffer.
+--- Stops watching the specified command and detaches from the buffer. If no argument is given, then checks the current buffer. If the current buffer is also not attached to a watcher, then prompts the user before stopping all of them.
 ---
---- @param event string|table? The command name to stop. If string, uses the string. If table, uses `event.file`.
+--- `WARNING:` If `watch.config.close_on_stop` is set to `true`, then affected buffers will also be deleted.
+---
+--- @param event string|table? The command name to stop. If string, then uses the string. If table, then uses `event.file`.
 Watch.stop = function(event)
     -- Get the current buffer if it is a watcher
     local bufname = nil

@@ -32,7 +32,7 @@ started Neovim.
 #### Features:
 - [x] Customizable refresh rate
 - [x] Stop and start at will
-- [x] Scrollable
+- [x] Scrollable output
 - [x] Pause watching when in the background
 
 #### Planned:

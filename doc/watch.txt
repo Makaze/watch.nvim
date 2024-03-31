@@ -32,7 +32,7 @@ started Neovim.
 Features: ~
     [x] Customizable refresh rate
     [x] Stop and start at will
-    [x] Scrollable
+    [x] Scrollable output
     [x] Pause watching when in the background
 
 Planned: ~
@@ -52,8 +52,13 @@ COMMANDS                                                        *watch-commands*
                                     Defaults to 500.
 
 :WatchStop {command...*}                                             *WatchStop*
-    Manually stops the watcher for {command...}. If a command is not given, all
-    watchers are stopped.
+    Stops watching {command...} and detaches from the buffer. If no
+    argument is given, then checks the current buffer. If the current buffer is
+    also not attached to a watcher, then prompts the user before stopping all of
+    them.
+
+    `WARNING:` If `watch.config.close_on_stop` is set to `true`, then affected
+    buffers will also be deleted. See |watch-config| for more information.
 
     Watchers are also automatically stopped when closing the buffer or exiting
     Neovim.
@@ -108,8 +113,13 @@ watch.start({command}, {refresh_rate*}, {bufnr*})               *watch.start()*
                                     Defaults to a new buffer.  
 
 watch.stop({event*})                                              *watch.stop()*
-    Stops a watcher based on a previously started command. If {event} is not
-    given, stops watchers on all commands.
+    Stops watching the specified command and detaches from the buffer. If no
+    argument is given, then checks the current buffer. If the current buffer is
+    also not attached to a watcher, then prompts the user before stopping all of
+    them.
+
+    `WARNING:` If `watch.config.close_on_stop` is set to `true`, then affected
+    buffers will also be deleted. See |watch-config| for more information.
 
     Parameters: ~
         {event}         (string|table)  (string) (optional) The command to stop.
