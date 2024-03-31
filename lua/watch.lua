@@ -105,6 +105,7 @@ Watch.update = function(command, bufnr)
                         vim.log.levels.WARN
                     )
                     Watch.stop(command)
+                    return
                 end
 
                 -- Save current cursor position
