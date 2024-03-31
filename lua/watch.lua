@@ -202,13 +202,9 @@ Watch.stop = function(event)
     local is_watcher = nil
     if not event or not event.event then
         bufname = collapse_bufname(vim.fn.expand("%"))
-        is_watcher = Watch.watchers[bufname] ~= nil
+        event = Watch.watchers[bufname]
     end
-    if
-        (not is_watcher and not event)
-        or not event
-        or event.event == "VimLeavePre"
-    then
+    if not event or event.event == "VimLeavePre" then
         -- Count keys the hard way
         local watch_count = 0
         for _ in pairs(Watch.watchers) do
@@ -226,7 +222,7 @@ Watch.stop = function(event)
         end
         vim.notify("[watch] Stopped " .. watch_count .. " watchers")
     else
-        local command = (event and event.file) or event or bufname
+        local command = (event and event.file)
         local W = Watch.watchers[command]
         -- Only error when not expected
         if not W then
