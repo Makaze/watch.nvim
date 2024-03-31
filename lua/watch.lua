@@ -199,7 +199,6 @@ end
 Watch.stop = function(event)
     -- Get the current buffer if it is a watcher
     local bufname = nil
-    local is_watcher = nil
     if not event or not event.event then
         bufname = collapse_bufname(vim.fn.expand("%"))
         event = Watch.watchers[bufname]
@@ -222,7 +221,7 @@ Watch.stop = function(event)
         end
         vim.notify("[watch] Stopped " .. watch_count .. " watchers")
     else
-        local command = (event and event.file)
+        local command = event or event.file
         local W = Watch.watchers[command]
         -- Only error when not expected
         if not W then
