@@ -102,7 +102,7 @@ Watch.update = function(command, bufnr)
                 if out.code ~= 0 then
                     vim.notify(
                         "[watch] ! Stopping: " .. out.stderr,
-                        vim.log.levels.WARN
+                        vim.log.levels.INFO
                     )
                     Watch.stop(command)
                     return
