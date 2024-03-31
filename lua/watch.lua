@@ -213,7 +213,7 @@ Watch.stop = function(event)
             local response = vim.notify(
                 "Not a watch buffer. Stop all ("
                     .. watch_count
-                    .. ") watchers (y/n)?",
+                    .. ") watchers (y/n)? ",
                 vim.log.levels.WARN
             )
             response = input.get_char()
