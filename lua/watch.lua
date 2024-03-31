@@ -104,7 +104,7 @@ Watch.update = function(command, bufnr)
                     -- Handle error
                     if out.code ~= 0 then
                         if Watch.watchers[command] then
-                            Watch.stop(command)
+                            Watch.kill(command)
                             vim.notify(
                                 "[watch] ! Stopping: " .. out.stderr,
                                 vim.log.levels.ERROR
@@ -252,7 +252,7 @@ Watch.stop = function(event)
         end
         vim.notify("[watch] Stopped " .. watch_count .. " watchers")
     else
-        local command = event or event.file
+        local command = event.file or event
         local W = Watch.watchers[command]
         -- Only error when not expected
         if not W then
