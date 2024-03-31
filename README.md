@@ -1,5 +1,7 @@
 # watch.nvim
 
+![watch nvim-demo-1](https://gist.github.com/assets/2280429/55391feb-95c2-44bc-a235-0cc61db4ed00)
+
 A scrollable `watch` alternative for Neovim.
 
 > [!IMPORTANT]
