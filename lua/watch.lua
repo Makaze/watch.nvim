@@ -95,39 +95,47 @@ Watch.update = function(command, bufnr)
 
         -- Execute your command and capture its output
         -- Use vim.system for async
-        vim.system(vim.split(command, " "), { text = true }, function(out)
-            -- Need vim.schedule to use most actions inside of vim loop
-            vim.schedule(function()
-                -- Handle error
-                if out.code ~= 0 then
-                    Watch.stop(command)
-                    vim.notify(
-                        "[watch] ! Stopping: " .. out.stderr,
-                        vim.log.levels.ERROR
-                    )
-                    return
-                end
+        local code = vim.system(
+            vim.split(command, " "),
+            { text = true },
+            function(out)
+                -- Need vim.schedule to use most actions inside of vim loop
+                vim.schedule(function()
+                    -- Handle error
+                    if out.code ~= 0 then
+                        Watch.stop(command)
+                        vim.notify(
+                            "[watch] ! Stopping: " .. out.stderr,
+                            vim.log.levels.ERROR
+                        )
+                        return
+                    end
 
-                -- Save current cursor position
-                local save_cursor = A.nvim_win_get_cursor(0)
+                    -- Save current cursor position
+                    local save_cursor = A.nvim_win_get_cursor(0)
 
-                local output = vim.split(out.stdout, "\n")
+                    local output = vim.split(out.stdout, "\n")
 
-                -- Strip ANSI color codes from the output
-                local stripped_output = {}
-                for _, line in ipairs(output) do
-                    local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
-                    table.insert(stripped_output, stripped_line)
-                    -- table.insert(stripped_output, line)
-                end
+                    -- Strip ANSI color codes from the output
+                    local stripped_output = {}
+                    for _, line in ipairs(output) do
+                        local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
+                        table.insert(stripped_output, stripped_line)
+                        -- table.insert(stripped_output, line)
+                    end
 
-                -- Clear the buffer and insert the stripped output
-                A.nvim_buf_set_lines(bufnr, 0, -1, false, stripped_output)
+                    -- Clear the buffer and insert the stripped output
+                    A.nvim_buf_set_lines(bufnr, 0, -1, false, stripped_output)
 
-                -- Restore cursor position
-                A.nvim_win_set_cursor(0, save_cursor)
-            end)
-        end)
+                    -- Restore cursor position
+                    A.nvim_win_set_cursor(0, save_cursor)
+                end)
+            end
+        )
+
+        if code then
+            Watch.stop(command)
+        end
     end
 end
 
