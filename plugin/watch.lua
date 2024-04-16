@@ -27,6 +27,31 @@ command("WatchStart", function(cmd)
     require("watch").start(table.concat(new_cmd, " "), refresh_rate, nil)
 end, "+")
 
+--- Starts a new watcher for the currently open file. Behaves like a normal watcher, but only runs the command if the file has been modified.
+---
+--- @param cmd table The watched command. Final argument is the refresh rate in milliseconds, or nil if not a number.
+command("WatchFile", function(cmd)
+    local args = cmd.fargs
+
+    -- Add the last argument to command if not a number
+    local refresh_rate = tonumber(args[#args])
+    local from = 1
+    local to = refresh_rate and #args - 1 or #args
+
+    -- Get the command(s) from the arguments
+    local new_cmd = {}
+    for i = from, to do
+        table.insert(new_cmd, args[i])
+    end
+
+    require("watch").start(
+        table.concat(new_cmd, " "),
+        refresh_rate,
+        nil,
+        vim.fn.expand("%:p")
+    )
+end, "+")
+
 --- Stops a watcher.
 ---
 --- `WARNING:` If `watch.config.close_on_stop` is set to `true`, then affected buffers will also be deleted.
