@@ -2,7 +2,7 @@
 
 Author: Makaze <christopherslane.work@gmail.com>
 License: GPLv3.0
-Version: 0.1.0
+Version: 0.2.0
 
 ================================================================================
 INTRODUCTION                                                             *watch*
@@ -34,6 +34,7 @@ Features: ~
     [x] Stop and start at will
     [x] Scrollable output
     [x] Pause watching when in the background
+    [x] Option to open in a configurable split window
 
 Planned: ~
     [ ] ANSI color support
@@ -77,10 +78,27 @@ the standard configuration. You can change those options by calling
     
     watch.setup({
         -------------------- Default configuration -----------------------------
-        refresh_rate = 500,     -- The default refresh rate for a new watcher in
-                                -- milliseconds. Defaults to `500`.
-        close_on_stop = false,  -- Whether to automatically delete the buffer
-                                -- when stopping a watcher. Defaults to `false`.
+        -- The default refresh rate for a new watcher in milliseconds. Defaults
+        -- to `500`.
+        refresh_rate = 500,
+        -- Whether to automatically delete the buffer when stopping a watcher.
+        -- Defaults to `false`.
+        close_on_stop = false,
+        -- Configuration for split window option
+        split = {
+            -- Whether to automatically delete the buffer when stopping a
+            -- watcher. Defaults to `false`.
+            enabled = false,
+            -- Where to place the split (above|below|right|left). Defaults to
+            -- `below`.
+            position = "below",
+            -- The size of the split in rows (or columns if position is right or
+            -- left). Defaults to `nil`.
+            size = nil,
+            -- Whether to focus on the newly created split watcher. Defaults to
+            -- `true`.
+            focus = true,
+        },
     })
 >
 

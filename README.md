@@ -1,8 +1,11 @@
 # watch.nvim
 
+**`v0.2.0`**
+
 A scrollable `watch` alternative for Neovim.
 
-![watch nvim-demo-1](https://private-user-images.githubusercontent.com/2280429/318253065-55391feb-95c2-44bc-a235-0cc61db4ed00.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MTI2NjI1MjcsIm5iZiI6MTcxMjY2MjIyNywicGF0aCI6Ii8yMjgwNDI5LzMxODI1MzA2NS01NTM5MWZlYi05NWMyLTQ0YmMtYTIzNS0wY2M2MWRiNGVkMDAuZ2lmP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI0MDQwOSUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNDA0MDlUMTEzMDI3WiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9NjhlYjliZWYzNDU1NmZkOWJhOWIxOTU2MzczZDI1MWEwM2U2ZTU5OTUxYWYyMjM0YWExOTY4YTZjYjYwZWFlNCZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QmYWN0b3JfaWQ9MCZrZXlfaWQ9MCZyZXBvX2lkPTAifQ.RmgZvXzI53dKy0t8DLN5PTqQcDP93jKgw2Hg807Ici0)
+![watch nvim-demo-1](demo.gif)
+
 
 > [!IMPORTANT]
 > `watch.nvim` requires Neovim 0.10+!
@@ -36,6 +39,7 @@ started Neovim.
 - [x] Stop and start at will
 - [x] Scrollable output
 - [x] Pause watching when in the background
+- [x] Option to open in a configurable split window
 
 #### Planned:
 - [ ] ANSI color support
@@ -65,10 +69,27 @@ local watch = require("watch")
 
 watch.setup({
     -------------------- Default configuration -----------------------------
-    refresh_rate = 500,     -- The default refresh rate for a new watcher in
-                            -- milliseconds. Defaults to `500`.
-    close_on_stop = false,  -- Whether to automatically delete the buffer
-                            -- when stopping a watcher. Defaults to `false`.
+    -- The default refresh rate for a new watcher in milliseconds. Defaults
+    -- to `500`.
+    refresh_rate = 500,
+    -- Whether to automatically delete the buffer when stopping a watcher.
+    -- Defaults to `false`.
+    close_on_stop = false,
+    -- Configuration for split window option
+    split = {
+        -- Whether to automatically delete the buffer when stopping a
+        -- watcher. Defaults to `false`.
+        enabled = false,
+        -- Where to place the split (above|below|right|left). Defaults to
+        -- `below`.
+        position = "below",
+        -- The size of the split in rows (or columns if position is right or
+        -- left). Defaults to `nil`.
+        size = nil,
+        -- Whether to focus on the newly created split watcher. Defaults to
+        -- `true`.
+        focus = true,
+    },
 })
 ```
 

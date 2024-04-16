@@ -48,10 +48,20 @@ end
 --- Global list of watchers and associated data.
 Watch.watchers = {}
 
+--- @class watch.SplitConfig
+---
+--- @field enabled boolean Whether to open the watch in a new split. Defaults to `false`.
+--- @field position '"above"'|'"below"'|'"right"'|'"left'" Where to place the split (above|below|right|left). Defaults to `below`.
+--- @field size integer|nil The size of the split in rows (or columns if position is right or left). Defaults to `nil`.
+--- @field focus boolean Whether to focus on the newly created split watcher. Defaults to `true`.
+---
+--- Configuration for watch.nvim.
+
 --- @class watch.Config
 ---
 --- @field refresh_rate integer The default refresh rate for a new watcher in milliseconds. Defaults to `500`.
 --- @field close_on_stop boolean Whether to automatically delete the buffer when stopping a watcher. Defaults to `false`.
+--- @field split watch.SplitConfig Configuration options for opening the watcher in a split.
 ---
 --- Configuration for watch.nvim.
 
@@ -59,19 +69,35 @@ Watch.watchers = {}
 Watch.config = {
     refresh_rate = 500,
     close_on_stop = false,
+    split = {
+        enabled = false,
+        position = "below",
+        size = nil,
+        focus = true,
+    },
 }
+
+--- @class watch.SplitConfigOverride
+---
+--- @field enabled boolean Whether to open the watch in a new split. Defaults to `false`.
+--- @field position? '"above"'|'"below"'|'"right"'|'"left'" Where to place the split (above|below|right|left). Defaults to `below`.
+--- @field size? integer|nil The size of the split in rows (or columns if position is right or left). Defaults to `nil`.
+--- @field focus? boolean Whether to focus on the newly created split watcher. Defaults to `true`.
+---
+--- Configuration for watch.nvim.
 
 --- @class watch.ConfigOverride
 ---
---- @field refresh_rate integer? The default refresh rate for a new watcher in milliseconds. Defaults to `500`.
---- @field close_on_stop boolean? Whether to automatically delete the buffer when stopping a watcher. Defaults to `false`.
+--- @field refresh_rate? integer The default refresh rate for a new watcher in milliseconds. Defaults to `500`.
+--- @field close_on_stop? boolean Whether to automatically delete the buffer when stopping a watcher. Defaults to `false`.
+--- @field split? watch.SplitConfigOverride Configuration options for opening the watcher in a split.
 ---
 --- Configuration overrides for watch.nvim.
 
 --- Changes configuration options. See `:help watch-config`.
 --- You do not have to call this function unless you want to change anything!
 ---
---- @param opts watch.ConfigOverride?
+--- @param opts? watch.ConfigOverride
 Watch.setup = function(opts)
     -- Do nothing if nothing given
     if not opts or not next(opts) then
@@ -140,8 +166,8 @@ end
 --- Starts continually reloading a buffer's contents with a shell command. If the command is aleady being watched, then opens that buffer in the current window.
 ---
 --- @param command string Shell command.
---- @param refresh_rate integer? Time between reloads in milliseconds. Defaults to `watch.config.refresh_rate`.
---- @param bufnr integer? Buffer number to update. Defaults to a new buffer.
+--- @param refresh_rate? integer Time between reloads in milliseconds. Defaults to `watch.config.refresh_rate`.
+--- @param bufnr? integer Buffer number to update. Defaults to a new buffer.
 Watch.start = function(command, refresh_rate, bufnr)
     -- Check if command is nil
     if not command or not string.len(command) then
@@ -177,6 +203,24 @@ Watch.start = function(command, refresh_rate, bufnr)
         refresh_rate = Watch.config.refresh_rate
     end
 
+    -- Create a split based on configurations
+    local split = Watch.config.split or {}
+    if split and split.enabled then
+        local position = split.position
+        local size = split.size or ""
+
+        if position == "above" then
+            A.nvim_command("split | wincmd k | resize " .. size)
+        elseif position == "right" then
+            A.nvim_command(size .. "vsplit")
+        elseif position == "left" then
+            A.nvim_command("vsplit | wincmd h | vertical resize " .. size)
+        else
+            -- Must be "below" by default
+            A.nvim_command(size .. "split")
+        end
+    end
+
     -- Get existing bufnr if bufname already exists
     bufnr = get_buf_by_name(command) or bufnr
 
@@ -189,6 +233,13 @@ Watch.start = function(command, refresh_rate, bufnr)
 
     -- Always set as current buffer when starting
     A.nvim_win_set_buf(0, bufnr)
+
+    -- Unfocus the window if set to false
+    if split and split.enabled then
+        if not split.focus then
+            A.nvim_command("wincmd p")
+        end
+    end
 
     -- Set up a timer to run the function every refresh_rate
     local timer = uv.new_timer()
@@ -222,7 +273,7 @@ end
 ---
 --- `WARNING:` If `watch.config.close_on_stop` is set to `true`, then affected buffers will also be deleted.
 ---
---- @param event string|table? The command name to stop. If string, then uses the string. If table, then uses `event.file`.
+--- @param event? string|table The command name to stop. If string, then uses the string. If table, then uses `event.file`.
 Watch.stop = function(event)
     -- Get the current buffer if it is a watcher
     local bufname = nil
