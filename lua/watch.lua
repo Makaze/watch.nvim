@@ -114,6 +114,8 @@ Watch.update = function(command, bufnr)
             return
         end
 
+        local system = vim.system or vim.fn.system
+
         -- Execute your command and capture its output
         -- Use vim.system for async
         local code = vim.system(
