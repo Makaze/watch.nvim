@@ -145,7 +145,7 @@ watch.start({command}, {refresh_rate*}, {bufnr*}, {file*})       *watch.start()*
                                     milliseconds. Defaults to `500`.
         {bufnr}         (integer)   (optional) The buffer number to load to.
                                     Defaults to a new buffer.  
-        {file}          (string)    (optional) The absolute path of a file to
+        {file}          (string)    (optional) The path of a file to
                                     watch. If given, the command will be run
                                     when the file is modified on the disk,
                                     checking at an interval of {refresh_rate}.

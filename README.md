@@ -120,6 +120,7 @@ watch.stop()                        -- Stop all watchers
 
 ```lua
 local watch = require("watch")
+-- Use `%s` inside the command to insert the absolute path of the current file.
 watch.start("cat %s", 3000, nil, "errog.log") -- Specify 3000 ms refresh
 watch.start("cat %s", nil, nil, "errog.log")  -- Default to 1000 ms refresh
 ```
