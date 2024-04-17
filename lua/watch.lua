@@ -118,7 +118,7 @@ Watch.update = function(command, bufnr)
 
         -- Execute your command and capture its output
         -- Use vim.system for async
-        local code = vim.system(
+        local code = system(
             vim.split(command, " "),
             { text = true },
             function(out)
