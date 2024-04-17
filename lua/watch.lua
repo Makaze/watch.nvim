@@ -16,9 +16,19 @@ local input = require("watch.input")
 --- @param bufnr integer The buffer number to check
 --- @return boolean visible
 local function is_visible(bufnr)
-    return vim.iter(A.nvim_list_wins()):any(function(win)
-        return A.nvim_win_get_buf(win) == bufnr
-    end)
+    if vim.iter then
+        return vim.iter(A.nvim_list_wins()):any(function(win)
+            return A.nvim_win_get_buf(win) == bufnr
+        end)
+    else
+        for _, win in ipairs(A.nvim_list_wins()) do
+            if A.nvim_win_get_buf(win) == bufnr then
+                return true
+            end
+        end
+    end
+
+    return false
 end
 
 --- Removes the current working directory from a buffer name.
@@ -37,10 +47,21 @@ end
 --- @param name string The buffer name to get.
 --- @return integer|nil bufnr
 local function get_buf_by_name(name)
-    return vim.iter(A.nvim_list_bufs()):find(function(b)
-        local bufname = collapse_bufname(A.nvim_buf_get_name(b))
-        return bufname == name
-    end)
+    if vim.iter then
+        return vim.iter(A.nvim_list_bufs()):find(function(b)
+            local bufname = collapse_bufname(A.nvim_buf_get_name(b))
+            return bufname == name
+        end)
+    else
+        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+            local bufname = collapse_bufname(vim.api.nvim_buf_get_name(buf))
+            if bufname == name then
+                return buf
+            end
+        end
+    end
+
+    return nil
 end
 
 --- @type watch.Watcher[]
