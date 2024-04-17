@@ -40,6 +40,7 @@ started Neovim.
 - [x] Scrollable output
 - [x] Pause watching when in the background
 - [x] Option to open in a configurable split window
+- [x] Option to watch for file changes
 
 #### Planned:
 - [ ] ANSI color support
@@ -53,7 +54,7 @@ Using [lazy.nvim](https://github.com/nvim-telescope/telescope.nvim):
 ```lua
 {
     "Makaze/watch.nvim",
-    cmd = { "WatchStart", "WatchStop" },
+    cmd = { "WatchStart", "WatchStop", "WatchFile" },
 }
 ```
 
@@ -95,7 +96,7 @@ watch.setup({
 
 # Example Usage
 
-You can use the Lua API or call the commands from the commandline. To watch the command `tree -cdC` every 500 milliseconds:
+You can use the Lua API or call the commands from the commandline. To watch the command `tree -cdC` every 500 milliseconds and to watch the file `error.log` for changes:
 
 ### Lua API
 
@@ -115,6 +116,15 @@ watch.stop({ file = "tree -cdC" })  -- Stop watching `tree -cdC`
 watch.stop()                        -- Stop all watchers
 ```
 
+##### Watch a File for Changes
+
+```lua
+local watch = require("watch")
+-- Use `%s` inside the command to insert the absolute path of the current file.
+watch.start("cat %s", 3000, nil, "errog.log") -- Specify 3000 ms refresh
+watch.start("cat %s", nil, nil, "errog.log")  -- Default to 1000 ms refresh
+```
+
 ### Ex Commands
 
 ##### Start
@@ -129,6 +139,14 @@ watch.stop()                        -- Stop all watchers
 ```vim
 :WatchStop tree -cdC                " Stop watching `tree -cdC`
 :WatchStop                          " Stop all watchers
+```
+
+##### Watch a File for Changes
+
+```vim
+" With error.log open and focused
+:WatchFile cat 3000                 " Specify 3000 ms refresh on the currently open file
+:WatchFile cat                      " Default to 1000 ms refresh on the currently open file
 ```
 
 # Documentation

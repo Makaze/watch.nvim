@@ -4,6 +4,8 @@
 --- @field refresh_rate integer The refresh rate for the watcher in milliseconds.
 --- @field bufnr integer The buffer number attached to the watcher.
 --- @field timer function The timer object attached to the watcher.
+--- @field file string|nil The filename to watch (if applicable).
+--- @field last_updated integer The time since the file was last checked. Used when watching files.
 
 local Watch = {}
 
@@ -41,6 +43,21 @@ local function get_buf_by_name(name)
         local bufname = collapse_bufname(A.nvim_buf_get_name(b))
         return bufname == name
     end)
+end
+
+--- Get the time a file was last updated, or `nil` if <= the result of last check.
+---
+--- @param path string The absolute file path.
+--- @param last_check integer The unix timestamp to check against. Defaults to `0`.
+--- @return integer|nil time
+local function file_updated(path, last_check)
+    last_check = last_check or 0
+    local stat = uv.fs_stat(path)
+    if stat and stat.type == "file" and stat.mtime.sec > last_check then
+        return stat.mtime.sec
+    else
+        return nil
+    end
 end
 
 --- @type watch.Watcher[]
@@ -119,6 +136,17 @@ Watch.update = function(command, bufnr)
             return
         end
 
+        local W = Watch.watchers[command]
+        if W.file then
+            local update = file_updated(W.file, W.last_updated)
+
+            if update then
+                Watch.watchers[command].last_updated = update
+            else
+                return
+            end
+        end
+
         -- Execute your command and capture its output
         -- Use vim.system for async
         local code = vim.system(
@@ -165,10 +193,11 @@ end
 
 --- Starts continually reloading a buffer's contents with a shell command. If the command is aleady being watched, then opens that buffer in the current window.
 ---
---- @param command string Shell command.
---- @param refresh_rate? integer Time between reloads in milliseconds. Defaults to `watch.config.refresh_rate`.
+--- @param command string Shell command to watch. If `file` is given, then `%s` will expand to the filename.
+--- @param refresh_rate? integer Time between reloads in milliseconds. Defaults to `watch.config.refresh_rate`. If `file` is provided, then it is increased to a minimum of 1000 ms.
 --- @param bufnr? integer Buffer number to update. Defaults to a new buffer.
-Watch.start = function(command, refresh_rate, bufnr)
+--- @param file? string The absolute path of the file to watch. Defaults to `nil`.
+Watch.start = function(command, refresh_rate, bufnr, file)
     -- Check if command is nil
     if not command or not string.len(command) then
         vim.notify("[watch] Error: Empty command passed", vim.log.levels.ERROR)
@@ -182,6 +211,11 @@ Watch.start = function(command, refresh_rate, bufnr)
             vim.log.levels.ERROR
         )
         return
+    end
+
+    -- Expand %s to the filename
+    if file then
+        command = string.gsub(command, "%%s", file)
     end
 
     -- Open the buffer if already running
@@ -201,6 +235,14 @@ Watch.start = function(command, refresh_rate, bufnr)
     -- Default to config refresh setting
     if not refresh_rate or refresh_rate <= 0 then
         refresh_rate = Watch.config.refresh_rate
+    end
+
+    -- Minimum 1000 ms if file check
+    if file and refresh_rate < 1000 then
+        vim.notify(
+            "[watch] File watchers require refresh_rate >= 1000. Increasing to 1000 ms."
+        )
+        refresh_rate = 1000
     end
 
     -- Create a split based on configurations
@@ -255,6 +297,8 @@ Watch.start = function(command, refresh_rate, bufnr)
         bufnr = bufnr,
         refresh_rate = refresh_rate,
         timer = timer,
+        file = file,
+        last_updated = 0,
     }
 
     Watch.watchers[command] = watcher
@@ -273,7 +317,7 @@ end
 ---
 --- `WARNING:` If `watch.config.close_on_stop` is set to `true`, then affected buffers will also be deleted.
 ---
---- @param event? string|table The command name to stop. If string, then uses the string. If table, then uses `event.file`.
+--- @param event? string|table The shell command to stop. If string, then uses the string. If table, then uses `event.file`.
 Watch.stop = function(event)
     -- Get the current buffer if it is a watcher
     local bufname = nil
