@@ -9,7 +9,7 @@ end
 
 --- Starts a new watcher.
 ---
---- @param cmd table The watched command. Final argument is the refresh rate in milliseconds, or nil if not a number.
+--- @param cmd table The watched command. Refresh rate is the last argument given in milliseconds, or defaults to config if not a number.
 command("WatchStart", function(cmd)
     local args = cmd.fargs
 
@@ -29,7 +29,7 @@ end, "+")
 
 --- Starts a new watcher for the currently open file. Behaves like a normal watcher, but only runs the command if the file has been modified.
 ---
---- @param cmd table The watched command. Final argument is the refresh rate in milliseconds, or nil if not a number.
+--- @param cmd table The watched command. Use `%s` inside the command to insert the absolute path of the current file. Refresh rate is the last argument given in milliseconds, or defaults to config if not a number (minimum 1000 for file watchers).
 command("WatchFile", function(cmd)
     local args = cmd.fargs
 
@@ -44,12 +44,11 @@ command("WatchFile", function(cmd)
         table.insert(new_cmd, args[i])
     end
 
-    require("watch").start(
-        table.concat(new_cmd, " "),
-        refresh_rate,
-        nil,
-        vim.fn.expand("%:p")
-    )
+    local cmd_string = table.concat(new_cmd, " ")
+
+    local file = vim.fn.expand("%:p")
+
+    require("watch").start(cmd_string, refresh_rate, nil, file)
 end, "+")
 
 --- Stops a watcher.

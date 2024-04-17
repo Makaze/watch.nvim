@@ -193,7 +193,7 @@ end
 
 --- Starts continually reloading a buffer's contents with a shell command. If the command is aleady being watched, then opens that buffer in the current window.
 ---
---- @param command string Shell command.
+--- @param command string Shell command to watch. If `file` is given, then `%s` will expand to the filename.
 --- @param refresh_rate? integer Time between reloads in milliseconds. Defaults to `watch.config.refresh_rate`. If `file` is provided, then it is increased to a minimum of 1000 ms.
 --- @param bufnr? integer Buffer number to update. Defaults to a new buffer.
 --- @param file? string The absolute path of the file to watch. Defaults to `nil`.
@@ -211,6 +211,11 @@ Watch.start = function(command, refresh_rate, bufnr, file)
             vim.log.levels.ERROR
         )
         return
+    end
+
+    -- Expand %s to the filename
+    if file then
+        command = string.gsub(command, "%%s", file)
     end
 
     -- Open the buffer if already running
@@ -312,7 +317,7 @@ end
 ---
 --- `WARNING:` If `watch.config.close_on_stop` is set to `true`, then affected buffers will also be deleted.
 ---
---- @param event? string|table The command name to stop. If string, then uses the string. If table, then uses `event.file`.
+--- @param event? string|table The shell command to stop. If string, then uses the string. If table, then uses `event.file`.
 Watch.stop = function(event)
     -- Get the current buffer if it is a watcher
     local bufname = nil
