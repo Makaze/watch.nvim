@@ -6,7 +6,7 @@ A scrollable `watch` alternative for Neovim.
 
 
 > [!IMPORTANT]
-> `watch.nvim` requires Neovim 0.10+!
+> `watch.nvim` requires `Neovim 0.9.5+`!
 
 `watch.nvim` is a simple plugin for live watching (i.e. continuously rerunning and
 checking the output of) a shell command in a Neovim buffer.
@@ -39,6 +39,7 @@ started Neovim.
 - [x] Pause watching when in the background
 - [x] Option to open in a configurable split window
 - [x] Option to watch for file changes
+- [x] Backwards compability with `Neovim 0.9.5`
 
 #### Planned:
 - [ ] ANSI color support

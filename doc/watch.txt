@@ -2,7 +2,7 @@
 
 Author: Makaze <christopherslane.work@gmail.com>
 License: GPLv3.0
-Version: 0.3.0
+Version: 0.3.1
 
 ================================================================================
 INTRODUCTION                                                             *watch*
@@ -36,6 +36,7 @@ Features: ~
     [x] Pause watching when in the background
     [x] Option to open in a configurable split window
     [x] Option to watch for file changes
+    [x] Backwards compability with `Neovim 0.9.5`
 
 Planned: ~
     [ ] ANSI color support
@@ -184,11 +185,18 @@ watch.update({command}, {bufnr})                                *watch.update()*
 
     Parameters: ~
         {command}       (string)    Shell command to load to the buffer.
-        {bufnr}         (integer)   The buffer number to load to. Defaults to a
-                                    new buffer.
+        {bufnr}         (integer)   The buffer number to udpate.
 
     Return: ~
         {updater}       (function)  Steps to take upon rerunning {command}.
+
+watch.update_lines({lines}, {bufnr})                      *watch.update_lines()*
+    Sets the content of the watch buffer to {lines}, preserving the scroll
+    position. Used internally by |watch.update()|.
+
+    Parameters: ~
+        {lines}         (table)     The lines to replace into the buffer.
+        {bufnr}         (integer)   The buffer number to udpate.
 
 ================================================================================
 
