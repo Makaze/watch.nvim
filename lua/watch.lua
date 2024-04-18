@@ -76,13 +76,6 @@ local function file_updated(path, last_check)
     local stat = uv.fs_stat(path)
     if stat and stat.type == "file" and stat.mtime.sec > last_check then
         return stat.mtime.sec
-    else
-        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-            local bufname = collapse_bufname(vim.api.nvim_buf_get_name(buf))
-            if bufname == name then
-                return buf
-            end
-        end
     end
 
     return nil
