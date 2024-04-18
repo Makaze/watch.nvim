@@ -18,9 +18,19 @@ local input = require("watch.input")
 --- @param bufnr integer The buffer number to check
 --- @return boolean visible
 local function is_visible(bufnr)
-    return vim.iter(A.nvim_list_wins()):any(function(win)
-        return A.nvim_win_get_buf(win) == bufnr
-    end)
+    if vim.iter then
+        return vim.iter(A.nvim_list_wins()):any(function(win)
+            return A.nvim_win_get_buf(win) == bufnr
+        end)
+    else
+        for _, win in ipairs(A.nvim_list_wins()) do
+            if A.nvim_win_get_buf(win) == bufnr then
+                return true
+            end
+        end
+    end
+
+    return false
 end
 
 --- Removes the current working directory from a buffer name.
@@ -39,10 +49,21 @@ end
 --- @param name string The buffer name to get.
 --- @return integer|nil bufnr
 local function get_buf_by_name(name)
-    return vim.iter(A.nvim_list_bufs()):find(function(b)
-        local bufname = collapse_bufname(A.nvim_buf_get_name(b))
-        return bufname == name
-    end)
+    if vim.iter then
+        return vim.iter(A.nvim_list_bufs()):find(function(b)
+            local bufname = collapse_bufname(A.nvim_buf_get_name(b))
+            return bufname == name
+        end)
+    else
+        for _, bufnr in ipairs(A.nvim_list_bufs()) do
+            local bufname = collapse_bufname(A.nvim_buf_get_name(bufnr))
+            if bufname == name then
+                return bufnr
+            end
+        end
+    end
+
+    return nil
 end
 
 --- Get the time a file was last updated, or `nil` if <= the result of last check.
@@ -56,8 +77,15 @@ local function file_updated(path, last_check)
     if stat and stat.type == "file" and stat.mtime.sec > last_check then
         return stat.mtime.sec
     else
-        return nil
+        for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+            local bufname = collapse_bufname(vim.api.nvim_buf_get_name(buf))
+            if bufname == name then
+                return buf
+            end
+        end
     end
+
+    return nil
 end
 
 --- @type watch.Watcher[]
@@ -114,7 +142,7 @@ Watch.config = {
 --- Changes configuration options. See `:help watch-config`.
 --- You do not have to call this function unless you want to change anything!
 ---
---- @param opts? watch.ConfigOverride
+--- @param opts watch.ConfigOverride?
 Watch.setup = function(opts)
     -- Do nothing if nothing given
     if not opts or not next(opts) then
@@ -124,7 +152,30 @@ Watch.setup = function(opts)
         vim.tbl_deep_extend("force", Watch.config, vim.F.if_nil(opts, {}))
 end
 
---- Replaces a buffer's contents with a shell command while preserving the cursor.
+--- Replaces the lines in a buffer while preserving the cursor.
+---
+--- @param lines table The lines to replace into the buffer.
+--- @param bufnr integer The buffer number to update.
+Watch.update_lines = function(lines, bufnr)
+    -- Save current cursor position
+    local save_cursor = A.nvim_win_get_cursor(0)
+
+    -- Strip ANSI color codes from the output
+    local stripped_output = {}
+    for _, line in ipairs(lines) do
+        local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
+        table.insert(stripped_output, stripped_line)
+        -- table.insert(stripped_output, line)
+    end
+
+    -- Clear the buffer and insert the stripped output
+    A.nvim_buf_set_lines(bufnr, 0, -1, false, stripped_output)
+
+    -- Restore cursor position
+    A.nvim_win_set_cursor(0, save_cursor)
+end
+
+--- Returns a function that updates the buffer's contents and preserves the cursor.
 ---
 --- @param command string Shell command.
 --- @param bufnr integer The buffer number to update.
@@ -148,46 +199,80 @@ Watch.update = function(command, bufnr)
         end
 
         -- Execute your command and capture its output
-        -- Use vim.system for async
-        local code = vim.system(
-            vim.split(command, " "),
-            { text = true },
-            function(out)
-                -- Need vim.schedule to use most actions inside of vim loop
-                vim.schedule(function()
-                    -- Handle error
-                    if out.code ~= 0 then
-                        if Watch.watchers[command] then
-                            Watch.kill(command)
-                            vim.notify(
-                                "[watch] ! Stopping: " .. out.stderr,
-                                vim.log.levels.ERROR
-                            )
+
+        if vim.system then
+            -- Use vim.system for async
+            local code = vim.system(
+                vim.split(command, " "),
+                { text = true },
+                function(out)
+                    -- Need vim.schedule to use most actions inside of vim loop
+                    vim.schedule(function()
+                        -- Handle error
+                        if out.code ~= 0 then
+                            if Watch.watchers[command] then
+                                Watch.kill(command)
+                                vim.notify(
+                                    "[watch] ! Stopping: " .. out.stderr,
+                                    vim.log.levels.ERROR
+                                )
+                            end
+                            return
                         end
-                        return
-                    end
 
-                    -- Save current cursor position
-                    local save_cursor = A.nvim_win_get_cursor(0)
+                        Watch.update_lines(vim.split(out.stdout, "\n"), bufnr)
+                    end)
+                end
+            )
+        else
+            -- Use vim.fn.jobstart for compatibility
+            local args = vim.split(command, " ")
+            local cmd = table.remove(args, 1)
 
-                    local output = vim.split(out.stdout, "\n")
+            local stdout = uv.new_pipe(false)
+            local stderr = uv.new_pipe(false)
+            local results = {}
+            local handle = nil
 
-                    -- Strip ANSI color codes from the output
-                    local stripped_output = {}
-                    for _, line in ipairs(output) do
-                        local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
-                        table.insert(stripped_output, stripped_line)
-                        -- table.insert(stripped_output, line)
-                    end
+            handle = uv.spawn(
+                cmd,
+                {
+                    args = args,
+                    stdio = { nil, stdout, stderr },
+                },
+                vim.schedule_wrap(function()
+                    stdout:read_stop()
+                    stderr:read_stop()
+                    stdout:close()
+                    stderr:close()
+                    handle:close()
 
-                    -- Clear the buffer and insert the stripped output
-                    A.nvim_buf_set_lines(bufnr, 0, -1, false, stripped_output)
-
-                    -- Restore cursor position
-                    A.nvim_win_set_cursor(0, save_cursor)
+                    Watch.update_lines(results, bufnr)
                 end)
+            )
+
+            local function onread(err, data)
+                if err then
+                    if Watch.watchers[command] then
+                        Watch.kill(command)
+                        vim.notify(
+                            "[watch] ! Stopping: " .. err,
+                            vim.log.levels.ERROR
+                        )
+                    end
+                    return
+                end
+                if data then
+                    local vals = vim.split(data, "\n")
+                    for _, d in pairs(vals) do
+                        table.insert(results, d)
+                    end
+                end
             end
-        )
+
+            uv.read_start(stdout, onread)
+            uv.read_start(stderr, onread)
+        end
     end
 end
 
@@ -317,7 +402,7 @@ end
 ---
 --- `WARNING:` If `watch.config.close_on_stop` is set to `true`, then affected buffers will also be deleted.
 ---
---- @param event? string|table The shell command to stop. If string, then uses the string. If table, then uses `event.file`.
+--- @param event string|table? The command name to stop. If string, then uses the string. If table, then uses `event.file`.
 Watch.stop = function(event)
     -- Get the current buffer if it is a watcher
     local bufname = nil
