@@ -143,8 +143,8 @@ watch.start("cat %s", nil, nil, "errog.log")  -- Default to 1000 ms refresh
 
 ```vim
 " With error.log open and focused
-:WatchFile cat 3000                 " Specify 3000 ms refresh on the currently open file
-:WatchFile cat                      " Default to 1000 ms refresh on the currently open file
+:WatchFile cat %s 3000              " Specify 3000 ms refresh on the currently open file
+:WatchFile cat %s                   " Default to 1000 ms refresh on the currently open file
 ```
 
 # Documentation
