@@ -187,6 +187,17 @@ Watch.update = function(command, bufnr)
             return
         end
 
+        local W = Watch.watchers[command]
+        if W.file then
+            local update = file_updated(W.file, W.last_updated)
+
+            if update then
+                Watch.watchers[command].last_updated = update
+            else
+                return
+            end
+        end
+
         -- Execute your command and capture its output
 
         if vim.system then
