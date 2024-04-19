@@ -166,9 +166,8 @@ Watch.update_lines = function(lines, bufnr)
     local save_cursor = A.nvim_win_get_cursor(0)
 
     -- Strip ANSI color codes from the output if unsupported
-    local stripped_output = (
-        Watch.config.ANSI_enabled and vim.fn.exists("g:loaded_AnsiEsc")
-    )
+    local ANSI_loaded = vim.fn.exists("g:loaded_AnsiEsc")
+    local stripped_output = (Watch.config.ANSI_enabled and ANSI_loaded)
             and lines
         or {}
     if #stripped_output < 1 then
@@ -176,7 +175,7 @@ Watch.update_lines = function(lines, bufnr)
             local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
             table.insert(stripped_output, stripped_line)
         end
-    else
+    elseif not ANSI_loaded then
         -- Check if ANSI is enabled
         if Watch.config.ANSI_enabled then
             A.nvim_buf_call(bufnr, function()
