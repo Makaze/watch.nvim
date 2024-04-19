@@ -145,7 +145,7 @@ Watch.setup = function(opts)
         return
     end
 
-    if opts.ANSI_enabled and not vim.fn.exists("g:loaded_AnsiEsc") then
+    if opts.ANSI_enabled and not vim.fn.exists(":AnsiEsc") then
         opts.ANSI_enabled = false
         vim.notify(
             "[watch] WARNING: Makaze/AnsiEsc not loaded; disabling ANSI colors",
