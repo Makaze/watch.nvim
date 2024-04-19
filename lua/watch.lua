@@ -6,6 +6,7 @@
 --- @field timer function The timer object attached to the watcher.
 --- @field file string|nil The filename to watch (if applicable).
 --- @field last_updated integer The time since the file was last checked. Used when watching files.
+--- @field ANSI_enabled boolean Whether ANSI color support has been applied to the watcher.
 
 local Watch = {}
 
@@ -167,6 +168,7 @@ Watch.update_lines = function(lines, bufnr)
 
     -- Strip ANSI color codes from the output if unsupported
     local ANSI_loaded = vim.fn.exists("g:loaded_AnsiEsc")
+    local bufname = collapse_bufname(A.nvim_buf_get_name(bufnr))
     local stripped_output = (Watch.config.ANSI_enabled and ANSI_loaded)
             and lines
         or {}
@@ -175,12 +177,13 @@ Watch.update_lines = function(lines, bufnr)
             local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
             table.insert(stripped_output, stripped_line)
         end
-    elseif not ANSI_loaded then
+    elseif not Watch.watchers[bufname].ANSI_enabled then
         -- Check if ANSI is enabled
         if Watch.config.ANSI_enabled then
             A.nvim_buf_call(bufnr, function()
                 A.nvim_command("AnsiEsc")
             end)
+            Watch.watchers[bufname].ANSI_enabled = true
         end
     end
 
