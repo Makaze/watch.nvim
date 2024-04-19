@@ -2,7 +2,7 @@
 
 Author: Makaze <christopherslane.work@gmail.com>
 License: GPLv3.0
-Version: 0.3.1
+Version: 0.4.0
 
 ================================================================================
 INTRODUCTION                                                             *watch*
@@ -38,9 +38,7 @@ Features: ~
     [x] Option to open in a configurable split window
     [x] Option to watch for file changes
     [x] Backwards compability with `Neovim 0.9.5`
-
-Planned: ~
-    [ ] ANSI color support
+    [x] ANSI color support
 
 ================================================================================
 COMMANDS                                                        *watch-commands*

@@ -264,7 +264,9 @@ Watch.update = function(command, bufnr)
                     stderr:read_stop()
                     stdout:close()
                     stderr:close()
-                    handle:close()
+                    if handle then
+                        handle:close()
+                    end
 
                     Watch.update_lines(results, bufnr)
                 end)
@@ -403,6 +405,7 @@ Watch.start = function(command, refresh_rate, bufnr, file)
         timer = timer,
         file = file,
         last_updated = 0,
+        ANSI_enabled = false,
     }
 
     Watch.watchers[command] = watcher
@@ -421,7 +424,7 @@ end
 ---
 --- `WARNING:` If `watch.config.close_on_stop` is set to `true`, then affected buffers will also be deleted.
 ---
---- @param event string|table? The command name to stop. If string, then uses the string. If table, then uses `event.file`.
+--- @param event? string|table The command name to stop. If string, then uses the string. If table, then uses `event.file`.
 Watch.stop = function(event)
     -- Get the current buffer if it is a watcher
     local bufname = nil
