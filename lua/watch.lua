@@ -176,6 +176,13 @@ Watch.update_lines = function(lines, bufnr)
             local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
             table.insert(stripped_output, stripped_line)
         end
+    else
+        -- Check if ANSI is enabled
+        if Watch.config.ANSI_enabled then
+            A.nvim_buf_call(bufnr, function()
+                A.nvim_command("AnsiEsc")
+            end)
+        end
     end
 
     -- Clear the buffer and insert the stripped output
@@ -370,10 +377,6 @@ Watch.start = function(command, refresh_rate, bufnr, file)
 
     -- Always set as current buffer when starting
     A.nvim_win_set_buf(0, bufnr)
-    -- Check if ANSI is enabled
-    if Watch.config.ANSI_enabled then
-        A.nvim_command("AnsiEsc")
-    end
 
     -- Unfocus the window if set to false
     if split and split.enabled then
