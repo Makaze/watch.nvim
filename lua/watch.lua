@@ -100,6 +100,7 @@ Watch.watchers = {}
 --- @field refresh_rate integer The default refresh rate for a new watcher in milliseconds. Defaults to `500`.
 --- @field close_on_stop boolean Whether to automatically delete the buffer when stopping a watcher. Defaults to `false`.
 --- @field split watch.SplitConfig Configuration options for opening the watcher in a split.
+--- @field ANSI_enabled boolean Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc.vim. Defaults to `true`.
 ---
 --- Configuration for watch.nvim.
 
@@ -113,6 +114,7 @@ Watch.config = {
         size = nil,
         focus = true,
     },
+    ANSI_enabled = true,
 }
 
 --- @class watch.SplitConfigOverride
@@ -129,6 +131,7 @@ Watch.config = {
 --- @field refresh_rate? integer The default refresh rate for a new watcher in milliseconds. Defaults to `500`.
 --- @field close_on_stop? boolean Whether to automatically delete the buffer when stopping a watcher. Defaults to `false`.
 --- @field split? watch.SplitConfigOverride Configuration options for opening the watcher in a split.
+--- @field ANSI_enabled? boolean Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc.vim. Defaults to `true`.
 ---
 --- Configuration overrides for watch.nvim.
 
@@ -141,6 +144,15 @@ Watch.setup = function(opts)
     if not opts or not next(opts) then
         return
     end
+
+    if opts.ANSI_enabled and not vim.fn.exists("g:loaded_AnsiEsc") then
+        opts.ANSI_enabled = false
+        vim.notify(
+            "[watch] WARNING: Makaze/AnsiEsc not loaded; disabling ANSI colors",
+            vim.log.levels.WARN
+        )
+    end
+
     Watch.config =
         vim.tbl_deep_extend("force", Watch.config, vim.F.if_nil(opts, {}))
 end
@@ -153,12 +165,17 @@ Watch.update_lines = function(lines, bufnr)
     -- Save current cursor position
     local save_cursor = A.nvim_win_get_cursor(0)
 
-    -- Strip ANSI color codes from the output
-    local stripped_output = {}
-    for _, line in ipairs(lines) do
-        local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
-        table.insert(stripped_output, stripped_line)
-        -- table.insert(stripped_output, line)
+    -- Strip ANSI color codes from the output if unsupported
+    local stripped_output = (
+        Watch.config.ANSI_enabled and vim.fn.exists("g:loaded_AnsiEsc")
+    )
+            and lines
+        or {}
+    if #stripped_output < 1 then
+        for _, line in ipairs(lines) do
+            local stripped_line = line:gsub("\27%[[%d;]*[mK]", "") -- Remove ANSI escape sequences
+            table.insert(stripped_output, stripped_line)
+        end
     end
 
     -- Clear the buffer and insert the stripped output
@@ -353,6 +370,10 @@ Watch.start = function(command, refresh_rate, bufnr, file)
 
     -- Always set as current buffer when starting
     A.nvim_win_set_buf(0, bufnr)
+    -- Check if ANSI is enabled
+    if Watch.config.ANSI_enabled then
+        A.nvim_command("AnsiEsc")
+    end
 
     -- Unfocus the window if set to false
     if split and split.enabled then
