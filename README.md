@@ -41,6 +41,11 @@ started Neovim.
 - [x] Backwards compability with `Neovim 0.9.5`
 - [x] ANSI color support
 
+# Requirements
+
+* Neovim 0.9.5+
+* Makaze/AnsiEsc (optional, required for ANSI colors)
+
 # Quickstart
 
 Install using your favorite plugin manager.
@@ -51,6 +56,7 @@ Using [lazy.nvim](https://github.com/nvim-telescope/telescope.nvim):
 {
     "Makaze/watch.nvim",
     dependencies = {
+        -- Optional. Add this if you want ANSI colors
         {
             "Makaze/AnsiEsc",
             lazy = false,
