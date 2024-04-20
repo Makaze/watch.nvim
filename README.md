@@ -44,7 +44,7 @@ started Neovim.
 # Requirements
 
 * Neovim 0.9.5+
-* Makaze/AnsiEsc (optional, required for ANSI colors)
+* [Makaze/AnsiEsc](https://github.com/Makaze/AnsiEsc) (optional, required for ANSI colors)
 
 # Quickstart
 
