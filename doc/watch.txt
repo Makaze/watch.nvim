@@ -40,6 +40,10 @@ Features: ~
     [x] Backwards compability with `Neovim 0.9.5`
     [x] ANSI color support
 
+Requirements: ~
+    * Neovim 0.9.5+
+    * Makaze/AnsiEsc (optional, required for ANSI colors)
+
 ================================================================================
 COMMANDS                                                        *watch-commands*
 
