@@ -39,9 +39,12 @@ started Neovim.
 - [x] Option to open in a configurable split window
 - [x] Option to watch for file changes
 - [x] Backwards compability with `Neovim 0.9.5`
+- [x] ANSI color support
 
-#### Planned:
-- [ ] ANSI color support
+# Requirements
+
+* Neovim 0.9.5+
+* Makaze/AnsiEsc (optional, required for ANSI colors)
 
 # Quickstart
 
@@ -52,7 +55,72 @@ Using [lazy.nvim](https://github.com/nvim-telescope/telescope.nvim):
 ```lua
 {
     "Makaze/watch.nvim",
+    dependencies = {
+        -- Optional. Add this if you want ANSI colors
+        {
+            "Makaze/AnsiEsc",
+            lazy = false,
+            config = function(_, opts)
+                vim.cmd([[
+                    " Returns the #rrggbb hex value for a HL group.
+                    "
+                    " @function GetHLHex
+                    " @description Returns the #rrggbb hex value for a HL group.
+                    " @poram group The highlight group to get. e.g. 'Comment'
+                    " @param ground The value to get ('fg' or 'bg').
+                    " @return The #rrggbb color value.
+                    function! GetHLHex(group, ground)
+                        " Get the syntax ID of the highlight group
+                        let syn_id = synIDtrans(hlID(a:group))
+
+                        " Get the RGB values of the foreground color in GUI mode
+                        let hex_color = synIDattr(syn_id, a:ground . '#')
+
+                        " Return the hex color
+                        return hex_color
+                    endfunction
+
+                    let g:ansi_Black = '#1d2021'
+                    let g:ansi_DarkRed = '#cc241d'
+                    let g:ansi_DarkGreen = '#98971a'
+                    let g:ansi_DarkYellow = '#d79921'
+                    let g:ansi_DarkBlue = '#458588'
+                    let g:ansi_DarkMagenta = '#b16286'
+                    let g:ansi_DarkCyan = '#689d6a'
+                    let g:ansi_LightGray = '#ebdbb2'
+                    let g:ansi_DarkGray = '#a89984'
+                ]])
+            end,
+        },
+    },
     cmd = { "WatchStart", "WatchStop", "WatchFile" },
+    opts = {
+        -------------------- Default configuration -----------------------------
+        -- The default refresh rate for a new watcher in milliseconds. Defaults
+        -- to `500`.
+        refresh_rate = 500,
+        -- Whether to automatically delete the buffer when stopping a watcher.
+        -- Defaults to `false`.
+        close_on_stop = false,
+        -- Configuration for split window option
+        split = {
+            -- Whether to automatically delete the buffer when stopping a
+            -- watcher. Defaults to `false`.
+            enabled = false,
+            -- Where to place the split (above|below|right|left). Defaults to
+            -- `below`.
+            position = "below",
+            -- The size of the split in rows (or columns if position is right or
+            -- left). Defaults to `nil`.
+            size = nil,
+            -- Whether to focus on the newly created split watcher. Defaults to
+            -- `true`.
+            focus = true,
+        },
+        -- Whether to enable ANSI color output. Requires Makaze/AnsiEsc.
+        -- Defaults to `true`.
+        ANSI_enabled = true,
+    }
 }
 ```
 
@@ -89,6 +157,9 @@ watch.setup({
         -- `true`.
         focus = true,
     },
+    -- Whether to enable ANSI color output. Requires Makaze/AnsiEsc.
+    -- Defaults to `true`.
+    ANSI_enabled = true,
 })
 ```
 
