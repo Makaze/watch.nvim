@@ -66,7 +66,7 @@ Using [lazy.nvim](https://github.com/nvim-telescope/telescope.nvim):
                     "
                     " @function GetHLHex
                     " @description Returns the #rrggbb hex value for a HL group.
-                    " @poram group The highlight group to get. e.g. 'Comment'
+                    " @param group The highlight group to get. e.g. 'Comment'
                     " @param ground The value to get ('fg' or 'bg').
                     " @return The #rrggbb color value.
                     function! GetHLHex(group, ground)
