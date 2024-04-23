@@ -1,4 +1,5 @@
 # watch.nvim
+<a href="https://dotfyle.com/plugins/Makaze/watch.nvim"> <img src="https://dotfyle.com/plugins/Makaze/watch.nvim/shield" /> </a>
 
 A scrollable `watch` alternative for Neovim.
 
