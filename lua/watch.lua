@@ -100,8 +100,8 @@ Watch.watchers = {}
 ---
 --- @field refresh_rate integer The default refresh rate for a new watcher in milliseconds. Defaults to `500`.
 --- @field close_on_stop boolean Whether to automatically delete the buffer when stopping a watcher. Defaults to `false`.
---- @field split watch.SplitConfig Configuration options for opening the watcher in a split.
---- @field ANSI_enabled boolean Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc.vim. Defaults to `true`.
+--- @field ANSI_enabled boolean Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc.vim. Ignored if terminal is set to `true`. Defaults to `false`.
+--- @field terminal boolean Whether to open in a terminal buffer. Automatically supports your terminal's built in ANSI colors. Has higher priority than ANSI_enabled. Defaults to `true`.
 ---
 --- Configuration for watch.nvim.
 
@@ -115,7 +115,8 @@ Watch.config = {
         size = nil,
         focus = true,
     },
-    ANSI_enabled = true,
+    ANSI_enabled = false,
+    terminal = true,
 }
 
 --- @class watch.SplitConfigOverride
@@ -132,7 +133,9 @@ Watch.config = {
 --- @field refresh_rate? integer The default refresh rate for a new watcher in milliseconds. Defaults to `500`.
 --- @field close_on_stop? boolean Whether to automatically delete the buffer when stopping a watcher. Defaults to `false`.
 --- @field split? watch.SplitConfigOverride Configuration options for opening the watcher in a split.
---- @field ANSI_enabled? boolean Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc.vim. Defaults to `true`.
+--- @field ANSI_enabled? boolean Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc.vim. Ignored if terminal is set to `true`. Defaults to `false`.
+--- @field terminal? boolean Whether to open in a terminal buffer. Automatically supports your terminal's built in ANSI colors. Has higher priority than ANSI_enabled. Defaults to `true`.
+---
 ---
 --- Configuration overrides for watch.nvim.
 
@@ -156,6 +159,51 @@ Watch.setup = function(opts)
 
     Watch.config =
         vim.tbl_deep_extend("force", Watch.config, vim.F.if_nil(opts, {}))
+end
+
+--- Sends a command to a terminal buffer and executes it.
+---
+--- @param bufnr integer The buffer number to update.
+--- @param command string The command to send to the terminal.
+Watch.update_term = function(bufnr, command)
+    -- Save the current window ID and cursor position
+    local original_win = A.nvim_get_current_win()
+    local original_cursor = A.nvim_win_get_cursor(original_win)
+
+    -- Check if terminal buffer
+    local terminal_window = nil
+    if A.nvim_get_option_value("buftype", { buf = bufnr }) == "terminal" then
+        -- Find the window ID associated with the specified buffer number
+        for _, win in ipairs(A.nvim_list_wins()) do
+            if A.nvim_win_get_buf(win) == bufnr then
+                terminal_window = win
+                break
+            end
+        end
+    end
+
+    -- Switch to the terminal window
+    if terminal_window then
+        A.nvim_set_current_win(terminal_window)
+
+        -- Send the command to the terminal buffer
+        vim.cmd("set modifiable")
+        A.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+        vim.cmd("set nomodified")
+        vim.fn.termopen(command .. "\n")
+        vim.cmd("set modifiable")
+
+        -- Restore the original window and cursor position
+        A.nvim_set_current_win(original_win)
+        A.nvim_win_set_cursor(original_win, original_cursor)
+    else
+        vim.notify(
+            "[watch] ERROR: Terminal buffer with bufnr "
+                .. bufnr
+                .. " not found",
+            vim.log.levels.ERROR
+        )
+    end
 end
 
 --- Replaces the lines in a buffer while preserving the cursor.
@@ -217,8 +265,13 @@ Watch.update = function(command, bufnr)
             end
         end
 
-        -- Execute your command and capture its output
+        -- Use terminal if set
+        if Watch.config.terminal then
+            Watch.update_term(bufnr, command)
+            return
+        end
 
+        -- Execute your command and capture its output otherwise
         if vim.system then
             -- Use vim.system for async
             local code = vim.system(
