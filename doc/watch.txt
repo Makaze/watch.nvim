@@ -2,7 +2,7 @@
 
 Author: Makaze <christopherslane.work@gmail.com>
 License: GPLv3.0
-Version: 0.4.0
+Version: 0.4.1
 
 ================================================================================
 INTRODUCTION                                                             *watch*

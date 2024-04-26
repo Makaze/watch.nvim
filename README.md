@@ -40,11 +40,12 @@ started Neovim.
 - [x] Option to watch for file changes
 - [x] Backwards compability with `Neovim 0.9.5`
 - [x] ANSI color support
+- [x] Avoid dependency with `:terminal` buffer by default
 
 # Requirements
 
 * Neovim 0.9.5+
-* [Makaze/AnsiEsc](https://github.com/Makaze/AnsiEsc) (optional, required for ANSI colors)
+* [Makaze/AnsiEsc](https://github.com/Makaze/AnsiEsc) (optional, required for ANSI colors if `terminal` is `false`)
 
 # Quickstart
 
