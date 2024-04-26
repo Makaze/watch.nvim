@@ -201,11 +201,16 @@ Watch.update_term = function(command, bufnr)
             vim.cmd("set modifiable")
             A.nvim_buf_set_lines(bufnr, 0, -1, false, {})
             vim.cmd("set nomodified")
-            vim.fn.termopen(command .. "\n")
-            vim.cmd("set modifiable")
+            vim.fn.termopen(command .. "\n", {
+                on_exit = function(job_id, data, event)
+                    vim.cmd("set modifiable")
 
-            -- Restore the original window and cursor position
-            A.nvim_win_set_cursor(terminal_win, original_cursor)
+                    -- Restore the original window and cursor position
+                    vim.schedule(function()
+                        A.nvim_win_set_cursor(terminal_win, original_cursor)
+                    end)
+                end,
+            })
         end)
     else
         vim.notify(
