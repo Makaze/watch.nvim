@@ -1,10 +1,8 @@
 # watch.nvim
-<a href="https://dotfyle.com/plugins/Makaze/watch.nvim"> <img src="https://dotfyle.com/plugins/Makaze/watch.nvim/shield" /> </a>
 
 A scrollable `watch` alternative for Neovim.
 
 ![watch nvim-demo-1](demo.gif)
-
 
 > [!IMPORTANT]
 > `watch.nvim` requires `Neovim 0.9.5+`!

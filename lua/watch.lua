@@ -180,10 +180,6 @@ end
 --- @param command string The command to send to the terminal.
 --- @param bufnr integer The buffer number to update.
 Watch.update_term = function(command, bufnr)
-    -- Save the current window ID and cursor position
-    local original_win = A.nvim_get_current_win()
-    local original_cursor = A.nvim_win_get_cursor(original_win)
-
     -- Check if terminal buffer
     local terminal_win = nil
     -- Find the window ID associated with the specified buffer number
@@ -196,6 +192,9 @@ Watch.update_term = function(command, bufnr)
 
     -- Switch to the terminal window
     if terminal_win then
+        -- Save the current window ID and cursor position
+        local original_cursor = A.nvim_win_get_cursor(terminal_win)
+
         A.nvim_win_call(terminal_win, function()
             -- Send the command to the terminal buffer
 
@@ -206,9 +205,7 @@ Watch.update_term = function(command, bufnr)
             vim.cmd("set modifiable")
 
             -- Restore the original window and cursor position
-            if terminal_win == original_win then
-                A.nvim_win_set_cursor(original_win, original_cursor)
-            end
+            A.nvim_win_set_cursor(terminal_win, original_cursor)
         end)
     else
         vim.notify(
