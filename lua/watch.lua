@@ -425,14 +425,14 @@ Watch.start = function(command, refresh_rate, bufnr, file)
     -- Get existing bufnr if bufname already exists
     bufnr = get_buf_by_name(command) or bufnr
 
+    -- Set buftype
+    --- @type string
+    local buftype = Watch.config.terminal == true and "terminal" or "nofile"
+
     -- Create a new buffer if not
     if not bufnr then
         bufnr = A.nvim_create_buf(true, true)
-        A.nvim_set_option_value(
-            "buftype",
-            Watch.config.terminal and "terminal" or "nofile",
-            { buf = bufnr }
-        )
+        A.nvim_set_option_value("buftype", buftype, { buf = bufnr })
         A.nvim_buf_set_name(bufnr, command)
     end
 
