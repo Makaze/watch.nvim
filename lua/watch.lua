@@ -53,12 +53,12 @@ local function get_buf_by_name(name)
     if vim.iter then
         return vim.iter(A.nvim_list_bufs()):find(function(b)
             local bufname = collapse_bufname(A.nvim_buf_get_name(b))
-            return bufname == name
+            return bufname == name or string.find(bufname, name)
         end)
     else
         for _, bufnr in ipairs(A.nvim_list_bufs()) do
             local bufname = collapse_bufname(A.nvim_buf_get_name(bufnr))
-            if bufname == name then
+            if bufname == name or string.find(bufname, name) then
                 return bufnr
             end
         end
@@ -172,13 +172,11 @@ Watch.update_term = function(bufnr, command)
 
     -- Check if terminal buffer
     local terminal_window = nil
-    if A.nvim_get_option_value("buftype", { buf = bufnr }) == "terminal" then
-        -- Find the window ID associated with the specified buffer number
-        for _, win in ipairs(A.nvim_list_wins()) do
-            if A.nvim_win_get_buf(win) == bufnr then
-                terminal_window = win
-                break
-            end
+    -- Find the window ID associated with the specified buffer number
+    for _, win in ipairs(A.nvim_list_wins()) do
+        if A.nvim_win_get_buf(win) == bufnr then
+            terminal_window = win
+            break
         end
     end
 
@@ -425,14 +423,10 @@ Watch.start = function(command, refresh_rate, bufnr, file)
     -- Get existing bufnr if bufname already exists
     bufnr = get_buf_by_name(command) or bufnr
 
-    -- Set buftype
-    --- @type string
-    local buftype = Watch.config.terminal == true and "terminal" or "nofile"
-
     -- Create a new buffer if not
     if not bufnr then
         bufnr = A.nvim_create_buf(true, true)
-        A.nvim_set_option_value("buftype", buftype, { buf = bufnr })
+        A.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
         A.nvim_buf_set_name(bufnr, command)
     end
 
