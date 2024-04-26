@@ -53,12 +53,12 @@ local function get_buf_by_name(name)
     if vim.iter then
         return vim.iter(A.nvim_list_bufs()):find(function(b)
             local bufname = collapse_bufname(A.nvim_buf_get_name(b))
-            return bufname == name or string.find(bufname, name)
+            return bufname == name or string.find(bufname, name, nil, true)
         end)
     else
         for _, bufnr in ipairs(A.nvim_list_bufs()) do
             local bufname = collapse_bufname(A.nvim_buf_get_name(bufnr))
-            if bufname == name or string.find(bufname, name) then
+            if bufname == name or string.find(bufname, name, nil, true) then
                 return bufnr
             end
         end
@@ -73,7 +73,7 @@ end
 --- @return string|nil command
 local function get_command_by_bufname(bufname)
     for command, _ in pairs(Watch.watchers) do
-        if bufname == command or string.find(bufname, command) then
+        if bufname == command or string.find(bufname, command, nil, true) then
             return command
         end
     end
@@ -177,9 +177,9 @@ end
 
 --- Sends a command to a terminal buffer and executes it.
 ---
---- @param bufnr integer The buffer number to update.
 --- @param command string The command to send to the terminal.
-Watch.update_term = function(bufnr, command)
+--- @param bufnr integer The buffer number to update.
+Watch.update_term = function(command, bufnr)
     -- Save the current window ID and cursor position
     local original_win = A.nvim_get_current_win()
     local original_cursor = A.nvim_win_get_cursor(original_win)
@@ -281,7 +281,7 @@ Watch.update = function(command, bufnr)
 
         -- Use terminal if set
         if Watch.config.terminal then
-            Watch.update_term(bufnr, command)
+            Watch.update_term(command, bufnr)
             return
         end
 
@@ -525,7 +525,12 @@ Watch.stop = function(event)
     else
         local command = event.file or event
         local W = Watch.watchers[command]
-            or Watch.watchers[get_command_by_bufname(command)]
+
+        if not W then
+            command = get_command_by_bufname(command)
+        end
+        W = Watch.watchers[command]
+
         -- Only error when not expected
         if not W then
             vim.notify(
