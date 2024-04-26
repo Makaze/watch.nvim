@@ -527,7 +527,7 @@ Watch.stop = function(event)
         local W = Watch.watchers[command]
 
         if not W then
-            command = get_command_by_bufname(command)
+            command = get_command_by_bufname(command) or ""
         end
         W = Watch.watchers[command]
 
