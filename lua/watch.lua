@@ -67,6 +67,20 @@ local function get_buf_by_name(name)
     return nil
 end
 
+--- Gets the command by the buffer name. Returns `nil` if not found.
+---
+--- @param bufname string The command name to get.
+--- @return string|nil command
+local function get_command_by_bufname(bufname)
+    for command, _ in pairs(Watch.watchers) do
+        if bufname == command or string.find(bufname, command) then
+            return command
+        end
+    end
+
+    return nil
+end
+
 --- Get the time a file was last updated, or `nil` if <= the result of last check.
 ---
 --- @param path string The absolute file path.
@@ -511,14 +525,13 @@ Watch.stop = function(event)
     else
         local command = event.file or event
         local W = Watch.watchers[command]
+            or Watch.watchers[get_command_by_bufname(command)]
         -- Only error when not expected
         if not W then
-            if not event or not event.event or event.event ~= "BufUnload" then
-                vim.notify(
-                    "[watch] Error: Already not watching " .. command,
-                    vim.log.levels.WARN
-                )
-            end
+            vim.notify(
+                "[watch] Error: Already not watching " .. command,
+                vim.log.levels.WARN
+            )
 
             return
         end
