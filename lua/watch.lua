@@ -428,7 +428,11 @@ Watch.start = function(command, refresh_rate, bufnr, file)
     -- Create a new buffer if not
     if not bufnr then
         bufnr = A.nvim_create_buf(true, true)
-        A.nvim_set_option_value("buftype", "nofile", { buf = bufnr })
+        A.nvim_set_option_value(
+            "buftype",
+            Watch.config.terminal and "terminal" or "nofile",
+            { buf = bufnr }
+        )
         A.nvim_buf_set_name(bufnr, command)
     end
 
