@@ -53,14 +53,28 @@ local function get_buf_by_name(name)
     if vim.iter then
         return vim.iter(A.nvim_list_bufs()):find(function(b)
             local bufname = collapse_bufname(A.nvim_buf_get_name(b))
-            return bufname == name
+            return bufname == name or string.find(bufname, name, nil, true)
         end)
     else
         for _, bufnr in ipairs(A.nvim_list_bufs()) do
             local bufname = collapse_bufname(A.nvim_buf_get_name(bufnr))
-            if bufname == name then
+            if bufname == name or string.find(bufname, name, nil, true) then
                 return bufnr
             end
+        end
+    end
+
+    return nil
+end
+
+--- Gets the command by the buffer name. Returns `nil` if not found.
+---
+--- @param bufname string The command name to get.
+--- @return string|nil command
+local function get_command_by_bufname(bufname)
+    for command, _ in pairs(Watch.watchers) do
+        if bufname == command or string.find(bufname, command, nil, true) then
+            return command
         end
     end
 
@@ -100,8 +114,8 @@ Watch.watchers = {}
 ---
 --- @field refresh_rate integer The default refresh rate for a new watcher in milliseconds. Defaults to `500`.
 --- @field close_on_stop boolean Whether to automatically delete the buffer when stopping a watcher. Defaults to `false`.
---- @field split watch.SplitConfig Configuration options for opening the watcher in a split.
---- @field ANSI_enabled boolean Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc.vim. Defaults to `true`.
+--- @field ANSI_enabled boolean Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc. Ignored if `terminal` is set to `true`. Defaults to `false`.
+--- @field terminal boolean Whether to open in a terminal buffer. Automatically supports your terminal's built in ANSI colors. Has higher priority than `ANSI_enabled`. Defaults to `true`.
 ---
 --- Configuration for watch.nvim.
 
@@ -115,7 +129,8 @@ Watch.config = {
         size = nil,
         focus = true,
     },
-    ANSI_enabled = true,
+    ANSI_enabled = false,
+    terminal = true,
 }
 
 --- @class watch.SplitConfigOverride
@@ -132,7 +147,9 @@ Watch.config = {
 --- @field refresh_rate? integer The default refresh rate for a new watcher in milliseconds. Defaults to `500`.
 --- @field close_on_stop? boolean Whether to automatically delete the buffer when stopping a watcher. Defaults to `false`.
 --- @field split? watch.SplitConfigOverride Configuration options for opening the watcher in a split.
---- @field ANSI_enabled? boolean Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc.vim. Defaults to `true`.
+--- @field ANSI_enabled? boolean Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc.vim. Ignored if terminal is set to `true`. Defaults to `false`.
+--- @field terminal? boolean Whether to open in a terminal buffer. Automatically supports your terminal's built in ANSI colors. Has higher priority than ANSI_enabled. Defaults to `true`.
+---
 ---
 --- Configuration overrides for watch.nvim.
 
@@ -156,6 +173,51 @@ Watch.setup = function(opts)
 
     Watch.config =
         vim.tbl_deep_extend("force", Watch.config, vim.F.if_nil(opts, {}))
+end
+
+--- Sends a command to a terminal buffer and executes it.
+---
+--- @param command string The command to send to the terminal.
+--- @param bufnr integer The buffer number to update.
+Watch.update_term = function(command, bufnr)
+    -- Save the current window ID and cursor position
+    local original_win = A.nvim_get_current_win()
+    local original_cursor = A.nvim_win_get_cursor(original_win)
+
+    -- Check if terminal buffer
+    local terminal_win = nil
+    -- Find the window ID associated with the specified buffer number
+    for _, win in ipairs(A.nvim_list_wins()) do
+        if A.nvim_win_get_buf(win) == bufnr then
+            terminal_win = win
+            break
+        end
+    end
+
+    -- Switch to the terminal window
+    if terminal_win then
+        A.nvim_win_call(terminal_win, function()
+            -- Send the command to the terminal buffer
+
+            vim.cmd("set modifiable")
+            A.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+            vim.cmd("set nomodified")
+            vim.fn.termopen(command .. "\n")
+            vim.cmd("set modifiable")
+
+            -- Restore the original window and cursor position
+            if terminal_win == original_win then
+                A.nvim_win_set_cursor(original_win, original_cursor)
+            end
+        end)
+    else
+        vim.notify(
+            "[watch] ERROR: Terminal buffer with bufnr "
+                .. bufnr
+                .. " not found",
+            vim.log.levels.ERROR
+        )
+    end
 end
 
 --- Replaces the lines in a buffer while preserving the cursor.
@@ -217,8 +279,13 @@ Watch.update = function(command, bufnr)
             end
         end
 
-        -- Execute your command and capture its output
+        -- Use terminal if set
+        if Watch.config.terminal then
+            Watch.update_term(command, bufnr)
+            return
+        end
 
+        -- Execute your command and capture its output otherwise
         if vim.system then
             -- Use vim.system for async
             local code = vim.system(
@@ -458,14 +525,18 @@ Watch.stop = function(event)
     else
         local command = event.file or event
         local W = Watch.watchers[command]
+
+        if not W then
+            command = get_command_by_bufname(command) or ""
+        end
+        W = Watch.watchers[command]
+
         -- Only error when not expected
         if not W then
-            if not event or not event.event or event.event ~= "BufUnload" then
-                vim.notify(
-                    "[watch] Error: Already not watching " .. command,
-                    vim.log.levels.WARN
-                )
-            end
+            vim.notify(
+                "[watch] Error: Already not watching " .. command,
+                vim.log.levels.WARN
+            )
 
             return
         end
