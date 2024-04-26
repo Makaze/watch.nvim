@@ -171,29 +171,31 @@ Watch.update_term = function(bufnr, command)
     local original_cursor = A.nvim_win_get_cursor(original_win)
 
     -- Check if terminal buffer
-    local terminal_window = nil
+    local terminal_win = nil
     -- Find the window ID associated with the specified buffer number
     for _, win in ipairs(A.nvim_list_wins()) do
         if A.nvim_win_get_buf(win) == bufnr then
-            terminal_window = win
+            terminal_win = win
             break
         end
     end
 
     -- Switch to the terminal window
-    if terminal_window then
-        A.nvim_set_current_win(terminal_window)
+    if terminal_win then
+        A.nvim_win_call(terminal_win, function()
+            -- Send the command to the terminal buffer
 
-        -- Send the command to the terminal buffer
-        vim.cmd("set modifiable")
-        A.nvim_buf_set_lines(bufnr, 0, -1, false, {})
-        vim.cmd("set nomodified")
-        vim.fn.termopen(command .. "\n")
-        vim.cmd("set modifiable")
+            vim.cmd("set modifiable")
+            A.nvim_buf_set_lines(bufnr, 0, -1, false, {})
+            vim.cmd("set nomodified")
+            vim.fn.termopen(command .. "\n")
+            vim.cmd("set modifiable")
 
-        -- Restore the original window and cursor position
-        A.nvim_set_current_win(original_win)
-        A.nvim_win_set_cursor(original_win, original_cursor)
+            -- Restore the original window and cursor position
+            if terminal_win == original_win then
+                A.nvim_win_set_cursor(original_win, original_cursor)
+            end
+        end)
     else
         vim.notify(
             "[watch] ERROR: Terminal buffer with bufnr "
