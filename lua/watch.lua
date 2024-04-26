@@ -100,8 +100,8 @@ Watch.watchers = {}
 ---
 --- @field refresh_rate integer The default refresh rate for a new watcher in milliseconds. Defaults to `500`.
 --- @field close_on_stop boolean Whether to automatically delete the buffer when stopping a watcher. Defaults to `false`.
---- @field ANSI_enabled boolean Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc.vim. Ignored if terminal is set to `true`. Defaults to `false`.
---- @field terminal boolean Whether to open in a terminal buffer. Automatically supports your terminal's built in ANSI colors. Has higher priority than ANSI_enabled. Defaults to `true`.
+--- @field ANSI_enabled boolean Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc. Ignored if `terminal` is set to `true`. Defaults to `false`.
+--- @field terminal boolean Whether to open in a terminal buffer. Automatically supports your terminal's built in ANSI colors. Has higher priority than `ANSI_enabled`. Defaults to `true`.
 ---
 --- Configuration for watch.nvim.
 

@@ -39,10 +39,12 @@ Features: ~
     [x] Option to watch for file changes
     [x] Backwards compability with `Neovim 0.9.5`
     [x] ANSI color support
+    [x] Avoid dependency with `:terminal` buffer by default
 
 Requirements: ~
     * Neovim 0.9.5+
-    * Makaze/AnsiEsc (optional, required for ANSI colors)
+    * Makaze/AnsiEsc (optional, required for ANSI colors if `terminal` is
+      `false`)
 
 ================================================================================
 COMMANDS                                                        *watch-commands*
@@ -119,6 +121,13 @@ the standard configuration. You can change those options by calling
             -- `true`.
             focus = true,
         },
+        -- Whether to enable ANSI colors in output. Requires Makaze/AnsiEsc.
+        -- Ignored if `terminal` is set to `true`. Defaults to `false`.
+        ANSI_enabled = false,
+        -- Whether to open in a terminal buffer. Automatically supports your
+        -- terminal's built in ANSI colors. Has higher priority than
+        -- `ANSI_enabled`. Defaults to `true`.
+        terminal = true,
     })
 >
 
@@ -133,10 +142,28 @@ watch.setup({opts*})                                             *watch.setup()*
         {opts}          (|watch.ConfigOverride|)
         Keys (all keys optional): ~
                         • `refresh_rate`: (integer) The default refresh rate for
-                          a new watcher in milliseconds. Default 500.
+                          a new watcher in milliseconds. Defaults to `500`.
                         • `close_on_stop`: (boolean) Whether to automatically
-                          delete the buffer when calling |watch.stop()|. Default
-                          false.
+                          delete the buffer when calling |watch.stop()|.
+                          Defaults to `false`.
+                        • `split`: (table) Settings for auto-opening in a split.
+                        • `split.enabled`: (boolean) Whether to open in a split
+                          by default. Defaults to `false`.
+                        • `split.position`: (string) Where to open the split
+                          (above|below|left|right). Defaults to `"below"`.
+                        • `split.size`: (integer|nil) The size of the split in
+                          rows (or columns if position is right or left).
+                          Defaults to `nil`.
+                        • `split.focus`: (boolean) Whether to focus on the newly
+                          created split watcher. Defaults to `true`.
+                        • `ANSI_enabled`: (boolean) Whether to enable ANSI colors
+                          in output. Requires Makaze/AnsiEsc. Ignored if
+                          `terminal` is set to `true`. Defaults to `false`.
+                        • `terminal`: (boolean) Whether to open in a terminal
+                          buffer. Automatically supports your terminal's built
+                          in ANSI colors. Has higher priority than
+                          `ANSI_enabled`. Defaults to `true`.
+
 
 watch.start({command}, {refresh_rate*}, {bufnr*}, {file*})       *watch.start()*
     Starts continually reloading a buffer's contents with a shell command. If
@@ -199,6 +226,14 @@ watch.update_lines({lines}, {bufnr})                      *watch.update_lines()*
 
     Parameters: ~
         {lines}         (table)     The lines to replace into the buffer.
+        {bufnr}         (integer)   The buffer number to udpate.
+
+watch.update_term({command}, {bufnr})                      *watch.update_term()*
+    Send {command} to the watch terminal buffer, preserving the scroll position.
+    Used internally by |watch.update()|.
+
+    Parameters: ~
+        {command}       (string)    Shell command to load to the buffer.
         {bufnr}         (integer)   The buffer number to udpate.
 
 ================================================================================
